@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2025-03-25
-> **Current Phase:** Implementation — TASK-08 next (FOUNDATION + DATA PIPELINE milestones complete)
+> **Current Phase:** Implementation — TASK-09 next (FOUNDATION + DATA PIPELINE milestones complete, V-6 passing)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-08: Evaluation Engine |
+| **Next task to implement** | TASK-09: Experiment Runner |
 | **Status** | NOT STARTED |
-| **Blocked by** | Nothing — TASK-07 is complete |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-6), Part 4 (TASK-08), Part 3 (V-6) |
+| **Blocked by** | Nothing — TASK-08 is complete |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-7), Part 4 (TASK-09), Part 3 (V-7) |
 
 ---
 
@@ -45,7 +45,7 @@
 | TASK-05 | Data Generator (SR-3) | **COMPLETE** ✓ | 23 V-3 tests pass. See [log](implementation_log/TASK-05_data_generator.md) |
 | TASK-06 | Split Generator (SR-4) | **COMPLETE** ✓ | 29 V-4 tests pass. See [log](implementation_log/TASK-06_split_generator.md) |
 | TASK-07 | Model Harness (SR-5) | **COMPLETE** ✓ | 33 V-5 tests pass. 8 model families. See [log](implementation_log/TASK-07_model_harness.md) |
-| TASK-08 | Evaluation Engine (SR-6) | NOT STARTED | Depends on TASK-07 |
+| TASK-08 | Evaluation Engine (SR-6) | **COMPLETE** ✓ | 52 V-6 tests pass. See [log](implementation_log/TASK-08_evaluation_engine.md) |
 | TASK-09 | Experiment Runner (SR-7) | NOT STARTED | Depends on TASK-04–08 |
 | TASK-10 | Report Generator (SR-8) | NOT STARTED | Depends on TASK-09 |
 | TASK-11 | Smoke Tests (EXP-0.x) | NOT STARTED | **GATE** — depends on TASK-10 |
@@ -57,7 +57,7 @@
 **Milestone Gates:**
 - `[x]` FOUNDATION complete (TASK-01–04 done + V-1, V-2, V-9, V-10 passing) ✓
 - `[x]` DATA PIPELINE complete (TASK-05–06 done + V-3, V-4 passing) ✓
-- `[ ]` FULL PIPELINE complete (TASK-07–10 done + V-5 through V-8 passing) — V-5 passing, V-6/7/8 not yet
+- `[ ]` FULL PIPELINE complete (TASK-07–10 done + V-5 through V-8 passing) — V-5, V-6 passing; V-7/8 not yet
 - `[ ]` SMOKE TEST GATE cleared (TASK-11 done + V-G1–G4 passing)
 
 ---
@@ -90,7 +90,7 @@ DataScience/
 │   ├── registry.py                   # SR-1: Task Registry ✓ BUILT (684 lines, 28 tasks)
 │   ├── data_generator.py             # SR-3: Data Generator ✓ BUILT (269 lines)
 │   ├── splits.py                     # SR-4: Split Generator ✓ BUILT (309 lines)
-│   ├── evaluation.py                 # SR-6: Evaluation Engine (planned)
+│   ├── evaluation.py                 # SR-6: Evaluation Engine ✓ BUILT (380 lines)
 │   ├── runner.py                     # SR-7: Experiment Runner (planned)
 │   ├── reporting.py                  # SR-8: Report Generator (planned)
 │   ├── dsl/
@@ -100,7 +100,7 @@ DataScience/
 │   └── models/
 │       ├── __init__.py
 │       └── harness.py                # SR-5: Model Harness ✓ BUILT (459 lines, 8 families)
-├── tests/                            # Validation test suite (282 tests total)
+├── tests/                            # Validation test suite (334 tests total)
 │   ├── __init__.py
 │   ├── test_schemas.py              # V-2: Input Schema tests ✓ 52 tests
 │   ├── test_classification_dsl.py   # V-9: Classification DSL tests ✓ 55 tests
@@ -108,7 +108,8 @@ DataScience/
 │   ├── test_registry.py             # V-1: Task Registry tests ✓ 34 tests
 │   ├── test_data_generator.py       # V-3: Data Generator tests ✓ 23 tests
 │   ├── test_splits.py               # V-4: Split Generator tests ✓ 29 tests
-│   └── test_model_harness.py        # V-5: Model Harness tests ✓ 33 tests
+│   ├── test_model_harness.py        # V-5: Model Harness tests ✓ 33 tests
+│   └── test_evaluation.py           # V-6: Evaluation Engine tests ✓ 52 tests
 ├── results/                          # Experiment outputs (auto-generated)
 ├── conftest.py                       # pytest root config
 ├── requirements.txt                  # Python dependencies
