@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2026-03-25 (TASK-09 complete)
+> **Last Updated:** 2026-03-25 (TASK-10 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -263,3 +263,19 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 - generate once per task/seed, then reuse that dataset across split strategies.
 - **Rationale:** This keeps split comparisons paired, reduces compute, and makes it easier to reason about differences between split strategies because the underlying examples come from the same sampled pool.
 - **Consequences:** Split-level comparisons are cleaner and more reproducible. The runner must carry split metadata forward so downstream reporting can still distinguish the evaluation conditions.
+
+---
+
+### ADR-017: Score solvability with partial-evidence normalization and explicit criteria gates
+
+- **Date:** 2026-03-25
+- **Task:** TASK-10
+- **Status:** ACCEPTED
+- **Context:** EXPERIMENT_DESIGN.md Section 9.4 defines the meaning of the solvability labels, while Section 11.5 defines a weighted solvability score. The design does not specify exact thresholds or how to treat experiments that intentionally omit some evidence channels.
+- **Options considered:**
+  1. Use best IID accuracy alone to assign verdicts
+  2. Leave verdicts blank until later diagnostic experiments add every evidence channel
+  3. Implement explicit criteria-based verdicts and normalize the weighted score over only the evidence components that are actually present
+- **Decision:** Option 3 - the report generator checks Section 9.4 criteria directly, keeps `STRONG` gated on observed optional evidence, and computes the weighted score over available components only.
+- **Rationale:** This preserves fidelity to the design document without over-claiming from incomplete experiments. Early experiments can still produce useful `WEAK`, `NEGATIVE`, or `INCONCLUSIVE` verdicts, while later experiments can earn `MODERATE` or `STRONG` once the needed evidence exists.
+- **Consequences:** `solvability_verdicts.json` stores both the criterion breakdown and the score evidence. Future tasks can extend the verdict logic by adding new split types or sample-efficiency measurements without changing the report file layout.

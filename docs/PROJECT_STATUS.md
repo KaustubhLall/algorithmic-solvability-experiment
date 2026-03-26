@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2026-03-25
-> **Current Phase:** Implementation - TASK-10 next (FOUNDATION + DATA PIPELINE milestones complete, V-7 passing)
+> **Current Phase:** Implementation - TASK-11 next (FULL PIPELINE milestone complete, V-8 passing)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-10: Report Generator |
+| **Next task to implement** | TASK-11: Pipeline Smoke Tests |
 | **Status** | NOT STARTED |
-| **Blocked by** | Nothing - TASK-09 is complete |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-8), Part 4 (TASK-10), Part 3 (V-8) |
+| **Blocked by** | Nothing - TASK-10 is complete |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-0.1 to EXP-0.3), Part 3 (V-G1 to V-G4), Part 4 (TASK-11) |
 
 ---
 
@@ -38,16 +38,16 @@
 
 | Task | Scope | Status | Notes |
 |---|---|---|---|
-| TASK-01 | Input Schema (SR-2) | **COMPLETE** | 52 V-2 tests pass. See [log](implementation_log/TASK-01_input_schema.md) |
-| TASK-02 | Classification Rule DSL (SR-9) | **COMPLETE** | 55 V-9 tests pass. See [log](implementation_log/TASK-02_classification_dsl.md) |
-| TASK-03 | Sequence DSL (SR-10) | **COMPLETE** | 56 V-10 tests pass. See [log](implementation_log/TASK-03_sequence_dsl.md) |
-| TASK-04 | Task Registry (SR-1) | **COMPLETE** | 34 V-1 tests pass. 28 tasks registered. See [log](implementation_log/TASK-04_task_registry.md) |
+| TASK-01 | Input Schema (SR-2) | **COMPLETE** | 54 V-2 tests pass. See [log](implementation_log/TASK-01_input_schema.md) |
+| TASK-02 | Classification Rule DSL (SR-9) | **COMPLETE** | 58 V-9 tests pass. See [log](implementation_log/TASK-02_classification_dsl.md) |
+| TASK-03 | Sequence DSL (SR-10) | **COMPLETE** | 57 V-10 tests pass. See [log](implementation_log/TASK-03_sequence_dsl.md) |
+| TASK-04 | Task Registry (SR-1) | **COMPLETE** | 35 V-1 tests pass. 28 tasks registered. See [log](implementation_log/TASK-04_task_registry.md) |
 | TASK-05 | Data Generator (SR-3) | **COMPLETE** | 23 V-3 tests pass. See [log](implementation_log/TASK-05_data_generator.md) |
-| TASK-06 | Split Generator (SR-4) | **COMPLETE** | 29 V-4 tests pass. See [log](implementation_log/TASK-06_split_generator.md) |
-| TASK-07 | Model Harness (SR-5) | **COMPLETE** | 33 V-5 tests pass. 8 model families. See [log](implementation_log/TASK-07_model_harness.md) |
-| TASK-08 | Evaluation Engine (SR-6) | **COMPLETE** | 52 V-6 tests pass. See [log](implementation_log/TASK-08_evaluation_engine.md) |
+| TASK-06 | Split Generator (SR-4) | **COMPLETE** | 33 V-4 tests pass. See [log](implementation_log/TASK-06_split_generator.md) |
+| TASK-07 | Model Harness (SR-5) | **COMPLETE** | 37 V-5 tests pass. 8 model families. See [log](implementation_log/TASK-07_model_harness.md) |
+| TASK-08 | Evaluation Engine (SR-6) | **COMPLETE** | 53 V-6 tests pass. See [log](implementation_log/TASK-08_evaluation_engine.md) |
 | TASK-09 | Experiment Runner (SR-7) | **COMPLETE** | 36 V-7 tests pass. Multi-seed orchestration, aggregation, and serialization helpers in `src/runner.py`. See [log](implementation_log/TASK-09_experiment_runner.md) |
-| TASK-10 | Report Generator (SR-8) | NOT STARTED | Depends on TASK-09 |
+| TASK-10 | Report Generator (SR-8) | **COMPLETE** | 6 V-8 tests pass. Writes JSON/Markdown/plot artifacts plus solvability verdicts in `src/reporting.py`. See [log](implementation_log/TASK-10_report_generator.md) |
 | TASK-11 | Smoke Tests (EXP-0.x) | NOT STARTED | **GATE** - depends on TASK-10 |
 | TASK-12 | Sequence Experiments | NOT STARTED | Depends on TASK-11 |
 | TASK-13 | Classification Experiments | NOT STARTED | Depends on TASK-11 |
@@ -57,7 +57,7 @@
 **Milestone Gates:**
 - `[x]` FOUNDATION complete (TASK-01-04 done + V-1, V-2, V-9, V-10 passing)
 - `[x]` DATA PIPELINE complete (TASK-05-06 done + V-3, V-4 passing)
-- `[ ]` FULL PIPELINE complete (TASK-07-10 done + V-5 through V-8 passing) - V-5, V-6, V-7 passing; V-8 not yet
+- `[x]` FULL PIPELINE complete (TASK-07-10 done + V-5 through V-8 passing)
 - `[ ]` SMOKE TEST GATE cleared (TASK-11 done + V-G1-G4 passing)
 
 ---
@@ -92,7 +92,7 @@ DataScience/
 |   |-- splits.py                     # SR-4 built (309 lines)
 |   |-- evaluation.py                 # SR-6 built (380 lines)
 |   |-- runner.py                     # SR-7 built (399 lines)
-|   |-- reporting.py                  # SR-8 planned
+|   |-- reporting.py                  # SR-8 built (729 lines)
 |   |-- dsl/
 |   |   |-- __init__.py
 |   |   |-- classification_dsl.py     # SR-9 built (735 lines)
@@ -100,22 +100,43 @@ DataScience/
 |   `-- models/
 |       |-- __init__.py
 |       `-- harness.py                # SR-5 built (459 lines, 8 families)
-|-- tests/                            # Validation suite (370 tests total)
+|-- tests/                            # Validation suite (392 tests total)
 |   |-- __init__.py
-|   |-- test_schemas.py               # V-2: 52 tests
-|   |-- test_classification_dsl.py    # V-9: 55 tests
-|   |-- test_sequence_dsl.py          # V-10: 56 tests
-|   |-- test_registry.py              # V-1: 34 tests
+|   |-- test_schemas.py               # V-2: 54 tests
+|   |-- test_classification_dsl.py    # V-9: 58 tests
+|   |-- test_sequence_dsl.py          # V-10: 57 tests
+|   |-- test_registry.py              # V-1: 35 tests
 |   |-- test_data_generator.py        # V-3: 23 tests
-|   |-- test_splits.py                # V-4: 29 tests
-|   |-- test_model_harness.py         # V-5: 33 tests
-|   |-- test_evaluation.py            # V-6: 52 tests
-|   `-- test_runner.py                # V-7: 36 tests
+|   |-- test_splits.py                # V-4: 33 tests
+|   |-- test_model_harness.py         # V-5: 37 tests
+|   |-- test_evaluation.py            # V-6: 53 tests
+|   |-- test_runner.py                # V-7: 36 tests
+|   `-- test_reporting.py             # V-8: 6 tests
 |-- results/
 |-- conftest.py
 |-- requirements.txt
 `-- main.py
 ```
+
+---
+
+## Validation Snapshot
+
+| Validation | Status | Notes |
+|---|---|---|
+| V-1 | PASS | 35 tests |
+| V-2 | PASS | 54 tests |
+| V-3 | PASS | 23 tests |
+| V-4 | PASS | 33 tests |
+| V-5 | PASS | 37 tests |
+| V-6 | PASS | 53 tests |
+| V-7 | PASS | 36 tests |
+| V-8 | PASS | 6 tests |
+| V-9 | PASS | 58 tests |
+| V-10 | PASS | 57 tests |
+| V-G1 to V-G4 | NOT RUN | Scheduled under TASK-11 |
+
+Full suite status: `392 passed, 4 warnings` (`.venv\Scripts\python.exe -m pytest -q`)
 
 ---
 
