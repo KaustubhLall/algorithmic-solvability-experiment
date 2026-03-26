@@ -5,7 +5,7 @@
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2025-03-25 (TASK-07 complete, FOUNDATION + DATA PIPELINE milestones done)
+> **Last Updated:** 2025-03-25 (TASK-08 complete, FOUNDATION + DATA PIPELINE milestones done, V-6 passing)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -29,6 +29,7 @@
 | TASK-05 | Data Generator (SR-3) | 2025-03-25 | [log](implementation_log/TASK-05_data_generator.md) | Label re-verification, noise injection, multi-task generation in `src/data_generator.py`. 23 V-3 tests pass. |
 | TASK-06 | Split Generator (SR-4) | 2025-03-25 | [log](implementation_log/TASK-06_split_generator.md) | **DATA PIPELINE MILESTONE.** 4 split strategies (IID, length, value, noise) in `src/splits.py`. 29 V-4 tests pass. |
 | TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 8 model families, unified encode→train→predict→decode pipeline in `src/models/harness.py`. 33 V-5 tests pass. |
+| TASK-08 | Evaluation Engine (SR-6) | 2025-03-25 | [log](implementation_log/TASK-08_evaluation_engine.md) | Classification + sequence metric dispatch, confusion matrix, per-class P/R/F1, error taxonomy, metadata-conditioned breakdowns in `src/evaluation.py`. 52 V-6 tests pass. |
 
 ---
 
@@ -45,6 +46,10 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 - **Noise seed must differ from data seed.** Noise uses `seed + 2**31` to avoid correlation with input sampling. Same pattern used in SplitGenerator's noise split (`seed + 2**30`).
 - **Single-file modules are fine until ~500 lines.** `harness.py` (459 lines) works well as a single file. The planned 3-file split (harness/configs/encoders) was unnecessary at this scale.
 - **All 8 sklearn model families work out-of-the-box.** No special handling needed beyond the `SklearnModelWrapper`. `random_state=42` everywhere ensures reproducibility.
+- **String-based evaluation simplifies metric computation.** By having `ModelHarness.run()` return string predictions and string true labels, the evaluation engine can use simple string equality for accuracy. No type coercion needed.
+- **Confusion matrix rows = true class, columns = predicted class.** Standard convention. Per-class precision/recall derived directly from the matrix without re-scanning predictions.
+- **Sequence token accuracy requires parsing stringified lists.** Sequence outputs are stringified by the harness, so the evaluation engine must parse them back (e.g., `"[1, 2, 3]"` → `["1", "2", "3"]`) for token-level comparison. Non-parseable outputs are gracefully skipped.
+- **Error taxonomy is track-specific.** Classification errors: correct/wrong_class/unknown_class. Sequence errors: correct/length_mismatch/content_error/off_by_one. Separate taxonomies give more actionable diagnostics.
 
 ---
 
@@ -52,7 +57,7 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. TASK-01 through TASK-07 complete. TASK-08 (Evaluation Engine) ready to start._
+_None. TASK-01 through TASK-08 complete. TASK-09 (Experiment Runner) ready to start._
 
 ---
 
@@ -67,7 +72,7 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-3 | Data Generator | **PASS** ✓ | 23 tests, all passing (0.23s) |
 | V-4 | Split Generator | **PASS** ✓ | 29 tests, all passing (0.12s) |
 | V-5 | Model Harness | **PASS** ✓ | 33 tests, all passing (1.00s) |
-| V-6 | Evaluation Engine | NOT RUN | |
+| V-6 | Evaluation Engine | **PASS** ✓ | 52 tests, all passing (0.84s) |
 | V-7 | Experiment Runner | NOT RUN | |
 | V-8 | Report Generator | NOT RUN | |
 | V-9 | Classification Rule DSL | **PASS** ✓ | 55 tests, all passing (0.28s) |

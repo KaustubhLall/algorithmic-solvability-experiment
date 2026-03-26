@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2025-03-25 (TASK-07 complete)
+> **Last Updated:** 2025-03-25 (TASK-08 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -218,3 +218,33 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 — sklearn only for now.
 - **Rationale:** sklearn's GBT is sufficient for the experiment's purposes. Keeping dependencies minimal reduces setup friction. The `SklearnModelWrapper` pattern makes it trivial to add XGBoost/LightGBM later.
 - **Consequences:** GBT performance may be slightly worse than XGBoost on large datasets, but experiment datasets are small (hundreds of samples). Can upgrade later without API changes.
+
+---
+
+### ADR-014: String-based evaluation interface (no type coercion)
+
+- **Date:** 2025-03-25
+- **Task:** TASK-08
+- **Status:** ACCEPTED
+- **Context:** The evaluation engine receives predictions and ground truth. ModelHarness already stringifies all outputs. Should the evaluator accept typed objects (lists, ints, strings) or work entirely on strings?
+- **Options considered:**
+  1. Accept typed objects, dispatch per type for comparison
+  2. Accept strings only, use string equality for accuracy
+- **Decision:** Option 2 — all predictions and ground truth are `List[str]`.
+- **Rationale:** ModelHarness.run() already returns `PredictionResult` with `predictions: List[str]` and `true_labels: List[str]`. Working on strings avoids type coercion bugs and keeps the interface uniform. Sequence token accuracy parses stringified lists internally when needed.
+- **Consequences:** Sequence outputs like `[1, 2, 3]` arrive as `"[1, 2, 3]"`. Token-level accuracy requires parsing these strings, but this is a contained concern inside `_compute_token_accuracy`.
+
+---
+
+### ADR-015: Track-specific error taxonomies
+
+- **Date:** 2025-03-25
+- **Task:** TASK-08
+- **Status:** ACCEPTED
+- **Context:** The spec calls for an `error_taxonomy: dict[str, int]`. What error categories should be used?
+- **Options considered:**
+  1. Single generic taxonomy (correct/wrong) for both tracks
+  2. Track-specific taxonomies with finer-grained error categories
+- **Decision:** Option 2 — separate taxonomies per track.
+- **Rationale:** Classification and sequence errors have fundamentally different failure modes. Classification: wrong_class vs unknown_class. Sequence: length_mismatch vs off_by_one vs content_error. Separate taxonomies give more actionable diagnostic information for downstream analysis (EXP-D experiments).
+- **Consequences:** Consumers of error_taxonomy must check `report.track` to interpret the keys correctly. This is acceptable since track is always known from the task.
