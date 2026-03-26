@@ -1,66 +1,71 @@
 # Algorithmic Solvability Experiment
 
-> **Goal:** Determine whether machine learning models can detect that a task is governed by a compact deterministic algorithm, by training on synthetic input-output pairs and testing for systematic generalization beyond the training distribution.
+A Python research app for testing whether machine learning models can detect that a task is governed by a compact deterministic algorithm. It generates synthetic input/output data from known reference algorithms, runs controlled experiments, and reports solvability evidence from generalization behavior.
 
-## Quick Start
+## Who It's For
 
-**To continue implementation in a new chat:**
+- ML researchers and experimentation engineers studying systematic generalization on controlled synthetic tasks
 
-1. Clone the repository
-2. Open `START_HERE.MD` and follow the instructions
-3. Or read `docs/PROJECT_STATUS.md` first for the current state
+## What It Does
 
-## What This Is
+- Defines both sequence and classification task tracks with typed schemas and DSLs.
+- Registers benchmark tasks with deterministic reference algorithms and verifiers.
+- Generates labeled datasets with reproducible seeds and optional input noise.
+- Creates train/test splits including IID, length, value, and noise shifts.
+- Trains multiple model families through a unified model harness.
+- Evaluates runs with task-aware metrics, error taxonomies, and metadata breakdowns.
+- Writes experiment artifacts, plots, markdown summaries, and solvability verdicts.
 
-A comprehensive experimental framework for testing algorithmic solvability detection:
+## How It Works
 
-- **Two task tracks:** Sequence (variable-length tokens) and Classification (mixed numerical/categorical tabular inputs)
-- **Synthetic ground truth:** Every task has a known reference algorithm that generates all labels
-- **Systematic generalization tests:** Length extrapolation, value-range shift, unseen feature combinations, adversarial splits
-- **Evidence criteria:** STRONG/MODERATE/WEAK/NEGATIVE/INCONCLUSIVE solvability verdicts
-- **Full validation pipeline:** Every component is validated before proceeding to the next
+| Component | Repo evidence |
+|---|---|
+| CLI | `main.py` runs the TASK-11 smoke workflow by default and writes artifacts to `results/`. |
+| Task layer | `src/schemas.py`, `src/registry.py`, and `src/dsl/*` define schemas, tasks, and program/rule DSLs. |
+| Data flow | `src/data_generator.py` samples inputs, applies reference algorithms, and verifies labels before splits. |
+| Execution | `src/splits.py` -> `src/models/harness.py` -> `src/evaluation.py` -> `src/runner.py` orchestrate split, train, predict, score, and aggregate. |
+| Reporting | `src/reporting.py` serializes metrics, summaries, plots, and solvability verdict outputs. |
 
-## Document Structure
+## Project Status
 
+The implementation is past the original scaffold stage. The smoke suite, sequence baseline suite, and classification baseline suite are all landed, and the next planned step is TASK-14 diagnostics. For the current state, see `docs/PROJECT_STATUS.md`.
+
+## How To Run
+
+1. Create and activate a Python environment.
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
 ```
-docs/
-├── PROJECT_STATUS.md             ← START HERE: current task, progress, file structure
-├── EXPERIMENT_DESIGN.md          ← Design rationale, task tiers, models, metrics
-├── EXPERIMENT_CATALOG.md         ← Full spec, execution plan, validation procedures
-├── ARCHITECTURE_DECISIONS.md     ← Append-only ADR log
-├── IMPLEMENTATION_LOG_SUMMARY.md ← Running summary and validation status
-└── implementation_log/           ← Per-task detailed logs
+
+3. Run the default smoke suite from the repo root:
+
+```bash
+python main.py
 ```
 
-## Execution Plan
+4. Optional commands:
 
-15 implementation tasks (TASK-01 → TASK-15) with clear dependencies:
+```bash
+python main.py smoke --output-root results
+python main.py sequence
+python main.py classification
+python -m pytest -q
+```
 
-- **TASK-01:** Input Schema System (start here)
-- **TASK-02–03:** Classification and Sequence DSLs (parallel)
-- **TASK-04:** Task Registry [MILESTONE: FOUNDATION]
-- **TASK-05–06:** Data Generator + Split Generator [MILESTONE: DATA PIPELINE]
-- **TASK-07–10:** Model Harness → Report Generator [MILESTONE: FULL PIPELINE]
-- **TASK-11:** Smoke Tests [GATE: must pass before experiments]
-- **TASK-12–13:** Core experiments (parallel)
-- **TASK-14:** Diagnostics
-- **TASK-15:** Bonus algorithm discovery
+If you are using the checked-in virtualenv on Windows, the local interpreter path is:
 
-## Current Status
+```powershell
+.\.venv\Scripts\python.exe main.py
+```
 
-- ✅ Complete design and execution infrastructure
-- ✅ All documentation and scaffolding
-- 🔄 Ready to begin implementation (TASK-01: Input Schema System)
-- ❌ No code written yet
+## Repo Notes
 
-## Why This Matters
+- Results are written under `results/<experiment-id>/`.
+- The default registry currently contains 32 benchmark tasks across the implemented S0-S3 and C0-C3 tiers.
+- The unified harness currently exposes 9 model families.
 
-Many ML systems appear to learn patterns, but it's unclear whether they're learning the underlying algorithm or just surface correlations. This framework provides a controlled way to test algorithmic understanding with known ground truth and systematic out-of-distribution tests.
+## Not Found In Repo
 
-## Repository
-
-**Public URL:** https://github.com/KaustubhLall/algorithmic-solvability-experiment
-
-## License
-
-MIT License — see LICENSE file for details.
+Deployed service, web UI, database, API server, and production hosting details are not present in this repository.

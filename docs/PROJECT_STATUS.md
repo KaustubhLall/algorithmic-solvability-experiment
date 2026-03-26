@@ -41,7 +41,7 @@
 | TASK-01 | Input Schema (SR-2) | **COMPLETE** | 54 V-2 tests pass. See [log](implementation_log/TASK-01_input_schema.md) |
 | TASK-02 | Classification Rule DSL (SR-9) | **COMPLETE** | 58 V-9 tests pass. See [log](implementation_log/TASK-02_classification_dsl.md) |
 | TASK-03 | Sequence DSL (SR-10) | **COMPLETE** | 57 V-10 tests pass. See [log](implementation_log/TASK-03_sequence_dsl.md) |
-| TASK-04 | Task Registry (SR-1) | **COMPLETE** | 35 V-1 tests pass. 28 tasks registered. See [log](implementation_log/TASK-04_task_registry.md) |
+| TASK-04 | Task Registry (SR-1) | **COMPLETE** | 35 V-1 tests pass. 32 tasks registered. See [log](implementation_log/TASK-04_task_registry.md) |
 | TASK-05 | Data Generator (SR-3) | **COMPLETE** | 23 V-3 tests pass. See [log](implementation_log/TASK-05_data_generator.md) |
 | TASK-06 | Split Generator (SR-4) | **COMPLETE** | 33 V-4 tests pass. See [log](implementation_log/TASK-06_split_generator.md) |
 | TASK-07 | Model Harness (SR-5) | **COMPLETE** | 38 V-5 tests pass. 9 model families including a raw-sequence LSTM path. See [log](implementation_log/TASK-07_model_harness.md) |
@@ -91,7 +91,7 @@ DataScience/
 |-- src/
 |   |-- __init__.py
 |   |-- schemas.py                    # SR-2 built
-|   |-- registry.py                   # SR-1 built (28 tasks)
+|   |-- registry.py                   # SR-1 built (32 tasks)
 |   |-- data_generator.py             # SR-3 built
 |   |-- splits.py                     # SR-4 built
 |   |-- evaluation.py                 # SR-6 built

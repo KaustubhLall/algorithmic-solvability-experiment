@@ -1459,8 +1459,8 @@ Each entry follows this template:
 - **Date:** 2025-03-25
 - **Task:** TASK-04 (SR-1)
 - **Type:** DEFERRAL
-- **What changed:** Only S0–S3 and C0–C3 task tiers are registered in the initial registry (28 tasks). S4 (structural/graph), S5 (DSL programs), C4 (stateful aggregation), and C5 (multi-step compositional) are deferred.
-- **Why:** Higher-tier tasks require more complex reference implementations. The initial 28 tasks cover all tiers needed for the pipeline (TASK-05 through TASK-11).
+- **What changed:** Only S0–S3 and C0–C3 task tiers are registered in the initial registry (32 tasks). S4 (structural/graph), S5 (DSL programs), C4 (stateful aggregation), and C5 (multi-step compositional) are deferred.
+- **Why:** Higher-tier tasks require more complex reference implementations. The initial 32 tasks cover all tiers needed for the pipeline (TASK-05 through TASK-11).
 - **Impact:** TASK-12/13 (experiment tasks) will need to add higher-tier tasks to the registry.
 - **Resolution:** Higher tiers will be added incrementally when experiment tasks are implemented.
 

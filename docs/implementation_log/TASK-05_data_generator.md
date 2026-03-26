@@ -42,7 +42,7 @@ V-3 validation: **23 tests, all passing** (pytest, 0.23s)
 
 | Check | Expected | Actual | Pass? |
 |---|---|---|---|
-| Label correctness | All labels match reference | 3 tests pass (200 samples + all 28 tasks × 50 samples) | YES |
+| Label correctness | All labels match reference | 3 tests pass (200 samples + all 32 tasks × 50 samples) | YES |
 | Reproducibility | Same seed → same dataset | 3 tests pass | YES |
 | Noise injection | Inputs modified, labels unchanged | 4 tests pass | YES |
 | Metadata | Complete per-sample and per-dataset metadata | 4 tests pass | YES |

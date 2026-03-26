@@ -25,7 +25,7 @@
 | TASK-01 | Input Schema (SR-2) | 2025-03-25 | [log](implementation_log/TASK-01_input_schema.md) | All 4 schema classes + 2 enums in `src/schemas.py`. 54 V-2 tests pass. |
 | TASK-02 | Classification Rule DSL (SR-9) | 2025-03-25 | [log](implementation_log/TASK-02_classification_dsl.md) | Predicates, combinators, classifiers, aggregators, rule sampler in `src/dsl/classification_dsl.py`. 58 V-9 tests pass. |
 | TASK-03 | Sequence DSL (SR-10) | 2025-03-25 | [log](implementation_log/TASK-03_sequence_dsl.md) | 18+ primitives, composition, program sampler, equivalence checking in `src/dsl/sequence_dsl.py`. 57 V-10 tests pass. |
-| TASK-04 | Task Registry (SR-1) | 2025-03-25 | [log](implementation_log/TASK-04_task_registry.md) | **FOUNDATION MILESTONE.** 28 tasks across S0-S3, C0-C3 in `src/registry.py`. 35 V-1 tests pass. |
+| TASK-04 | Task Registry (SR-1) | 2025-03-25 | [log](implementation_log/TASK-04_task_registry.md) | **FOUNDATION MILESTONE.** 32 tasks across S0-S3, C0-C3 in `src/registry.py`. 35 V-1 tests pass. |
 | TASK-05 | Data Generator (SR-3) | 2025-03-25 | [log](implementation_log/TASK-05_data_generator.md) | Label re-verification, noise injection, multi-task generation in `src/data_generator.py`. 23 V-3 tests pass. |
 | TASK-06 | Split Generator (SR-4) | 2025-03-25 | [log](implementation_log/TASK-06_split_generator.md) | **DATA PIPELINE MILESTONE.** 4 split strategies (IID, length, value, noise) in `src/splits.py`. 33 V-4 tests pass. |
 | TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 9 model families, unified encode->train->predict->decode pipeline in `src/models/harness.py`, now including a raw-sequence LSTM path. 38 V-5 tests pass. |
