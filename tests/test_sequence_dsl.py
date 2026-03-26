@@ -359,6 +359,11 @@ class TestDeduplication:
         # At least half should be unique
         assert len(unique_names) >= len(progs) * 0.5
 
+    def test_equivalence_helper_uses_negative_values_by_default(self):
+        pos_only = SeqProgram(program_id="pos", op=MapAbs())
+        sign_sensitive = SeqProgram(program_id="sign", op=MapSign())
+        assert not check_functional_equivalence(pos_only, sign_sensitive, n_test_inputs=200, seed=123)
+
 
 # ===================================================================
 # 6. Sampler Tests

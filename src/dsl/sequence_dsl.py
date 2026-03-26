@@ -560,7 +560,7 @@ def check_functional_equivalence(
     prog_b: SeqProgram,
     n_test_inputs: int = 1000,
     seed: int = 42,
-    value_range: Tuple[int, int] = (0, 9),
+    value_range: Tuple[int, int] = (-9, 9),
     length_range: Tuple[int, int] = (3, 10),
 ) -> bool:
     """Check if two programs are functionally equivalent on random inputs.

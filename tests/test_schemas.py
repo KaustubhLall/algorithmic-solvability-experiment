@@ -129,9 +129,22 @@ class TestConstructionValidation:
         with pytest.raises(ValueError, match="weights must sum to 1.0"):
             CategoricalFeatureSpec(name="bad", values=("a", "b"), distribution=Distribution.WEIGHTED, weights=(0.3, 0.3))
 
+    def test_categorical_negative_weight_raises(self):
+        with pytest.raises(ValueError, match="non-negative"):
+            CategoricalFeatureSpec(
+                name="bad",
+                values=("a", "b"),
+                distribution=Distribution.WEIGHTED,
+                weights=(1.1, -0.1),
+            )
+
     def test_categorical_invalid_distribution_raises(self):
         with pytest.raises(ValueError, match="UNIFORM or WEIGHTED"):
             CategoricalFeatureSpec(name="bad", values=("a", "b"), distribution=Distribution.NORMAL)
+
+    def test_numerical_invalid_distribution_raises(self):
+        with pytest.raises(ValueError, match="unsupported distribution"):
+            NumericalFeatureSpec(name="bad", min_val=0.0, max_val=1.0, distribution=Distribution.WEIGHTED)
 
     def test_sequence_min_length_zero_raises(self):
         with pytest.raises(ValueError, match="min_length must be >= 1"):
@@ -446,7 +459,7 @@ class TestSchemaProperties:
         spec = NumericalFeatureSpec(name="x", min_val=0.0, max_val=1.0)
         assert spec.is_numerical is True
         assert spec.is_categorical is False
-        assert spec.expected_type is float
+        assert spec.expected_type == (int, float)
 
     def test_categorical_feature_spec_properties(self):
         spec = CategoricalFeatureSpec(name="c", values=("a", "b", "c"))

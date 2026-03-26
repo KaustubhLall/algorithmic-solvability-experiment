@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.data_generator import generate_dataset
+from src.data_generator import Dataset, Sample, generate_dataset
 from src.registry import build_default_registry
 from src.splits import (
     SplitGenerator,
@@ -180,6 +180,26 @@ class TestValueExtrapolation:
         assert result.split_metadata["feature_name"] == "x1"
         assert result.split_metadata["train_range"] == (30.0, 70.0)
 
+    def test_non_numeric_train_range_raises(self, threshold_dataset):
+        with pytest.raises(ValueError, match="numeric bounds"):
+            split_value(threshold_dataset, feature_name="x1", train_range=("low", 70.0))
+
+    def test_inverted_train_range_raises(self, threshold_dataset):
+        with pytest.raises(ValueError, match="lower bound"):
+            split_value(threshold_dataset, feature_name="x1", train_range=(80.0, 20.0))
+
+    def test_non_numeric_sequence_values_go_to_test(self):
+        dataset = Dataset(
+            task_id="synthetic",
+            samples=[
+                Sample(input_data=[1, 2, 3], output_data=[1], task_id="synthetic", seed=0),
+                Sample(input_data=[1, "oops", 3], output_data=[1], task_id="synthetic", seed=1),
+            ],
+        )
+        result = split_value(dataset, feature_name="", train_range=(0, 5))
+        assert [sample.seed for sample in result.train] == [0]
+        assert [sample.seed for sample in result.test] == [1]
+
 
 # ===================================================================
 # 4. Noise Split
@@ -226,6 +246,12 @@ class TestNoiseSplit:
         for s in result.test:
             clean = task.input_sampler(s.seed)
             assert s.input_data == clean
+
+    def test_invalid_noise_level_raises(self, sort_dataset):
+        with pytest.raises(ValueError, match="test_noise_level"):
+            split_noise(sort_dataset, test_noise_level=-0.1, seed=42)
+        with pytest.raises(ValueError, match="test_noise_level"):
+            split_noise(sort_dataset, test_noise_level=1.1, seed=42)
 
 
 # ===================================================================

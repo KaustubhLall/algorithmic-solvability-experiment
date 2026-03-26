@@ -12,7 +12,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -43,11 +43,16 @@ class ModelConfig:
         hyperparams: Model-specific hyperparameters.
         name: Human-readable name (auto-generated if not set).
     """
-    family: ModelFamily
+    family: Union[ModelFamily, str]
     hyperparams: Dict[str, Any] = field(default_factory=dict)
     name: Optional[str] = None
 
     def __post_init__(self) -> None:
+        if isinstance(self.family, str):
+            try:
+                self.family = ModelFamily(self.family)
+            except ValueError as exc:
+                raise ValueError(f"Unknown model family: {self.family}") from exc
         if self.name is None:
             self.name = self.family.value
 
@@ -114,8 +119,10 @@ class InputEncoder:
         """Transform inputs into a numeric feature matrix."""
         if not self._fitted:
             raise RuntimeError("InputEncoder must be fit before transform")
+        if not inputs:
+            return np.zeros((0, len(self._feature_names)), dtype=np.float64)
 
-        sample = inputs[0] if inputs else None
+        sample = inputs[0]
         if isinstance(sample, dict):
             return self._transform_tabular(inputs)
         elif isinstance(sample, list):
@@ -220,7 +227,8 @@ class MajorityClassModel(BaseModel):
         self._majority = int(values[np.argmax(counts)])
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        assert self._majority is not None
+        if self._majority is None:
+            raise RuntimeError("MajorityClassModel must be fit before predict")
         return np.full(X.shape[0], self._majority)
 
     def name(self) -> str:
@@ -417,6 +425,15 @@ class ModelHarness:
 
         # Train
         self._model.fit(X_train, y_train)
+
+        if len(test_inputs) == 0:
+            return PredictionResult(
+                model_name=self._model.name(),
+                predictions=[],
+                true_labels=test_labels_str,
+                train_size=len(train_inputs),
+                test_size=0,
+            )
 
         # Predict
         y_pred_encoded = self._model.predict(X_test)

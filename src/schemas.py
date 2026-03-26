@@ -61,6 +61,14 @@ class NumericalFeatureSpec:
                 f"NumericalFeatureSpec '{self.name}': "
                 f"min_val ({self.min_val}) > max_val ({self.max_val})"
             )
+        if self.distribution not in (
+            Distribution.UNIFORM,
+            Distribution.NORMAL,
+            Distribution.EXPONENTIAL,
+        ):
+            raise ValueError(
+                f"NumericalFeatureSpec '{self.name}': unsupported distribution {self.distribution}"
+            )
 
     @property
     def is_numerical(self) -> bool:
@@ -71,8 +79,8 @@ class NumericalFeatureSpec:
         return False
 
     @property
-    def expected_type(self) -> type:
-        return float
+    def expected_type(self) -> tuple[type, ...]:
+        return (int, float)
 
     def sample(self, rng: np.random.Generator) -> float:
         """Sample a single value from this feature's distribution."""
@@ -130,6 +138,10 @@ class CategoricalFeatureSpec:
             if not math.isclose(sum(self.weights), 1.0, rel_tol=1e-6):
                 raise ValueError(
                     f"CategoricalFeatureSpec '{self.name}': weights must sum to 1.0, got {sum(self.weights)}"
+                )
+            if any(weight < 0 for weight in self.weights):
+                raise ValueError(
+                    f"CategoricalFeatureSpec '{self.name}': weights must be non-negative"
                 )
         if self.distribution not in (Distribution.UNIFORM, Distribution.WEIGHTED):
             raise ValueError(

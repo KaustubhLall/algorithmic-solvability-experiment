@@ -358,6 +358,11 @@ def evaluate(
             f"predictions length ({len(predictions)}) != "
             f"ground_truth length ({len(ground_truth)})"
         )
+    if metadata is not None and len(metadata) != len(predictions):
+        raise ValueError(
+            f"metadata length ({len(metadata)}) != "
+            f"predictions length ({len(predictions)})"
+        )
 
     n_samples = len(predictions)
     accuracy = _compute_accuracy(predictions, ground_truth)
@@ -393,14 +398,13 @@ def _evaluate_classification(
     meta_conditioned: Dict[str, Any],
 ) -> EvalReport:
     """Compute classification-specific metrics."""
-    # Determine class labels from ground truth + predictions
-    all_labels = sorted(set(ground_truth) | set(predictions))
+    known_labels = sorted(set(ground_truth))
 
-    cm = _compute_confusion_matrix(predictions, ground_truth, all_labels)
-    per_class = _per_class_from_confusion(cm, all_labels)
+    cm = _compute_confusion_matrix(predictions, ground_truth, known_labels)
+    per_class = _per_class_from_confusion(cm, known_labels)
     macro = _macro_f1(per_class)
     weighted = _weighted_f1(per_class)
-    error_tax = _classification_error_taxonomy(predictions, ground_truth, all_labels)
+    error_tax = _classification_error_taxonomy(predictions, ground_truth, known_labels)
 
     return EvalReport(
         task_id=task.task_id,
@@ -412,7 +416,7 @@ def _evaluate_classification(
         macro_f1=macro,
         weighted_f1=weighted,
         confusion_matrix=cm,
-        class_labels=all_labels,
+        class_labels=known_labels,
         exact_match=None,
         token_accuracy=None,
         error_taxonomy=error_tax,

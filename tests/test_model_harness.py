@@ -154,6 +154,11 @@ class TestMajorityClass:
         unique_preds = set(result.predictions)
         assert len(unique_preds) == 1
 
+    def test_predict_before_fit_raises_runtime_error(self):
+        model = MajorityClassModel()
+        with pytest.raises(RuntimeError, match="fit before predict"):
+            model.predict(np.zeros((2, 3)))
+
 
 # ===================================================================
 # 4. Decision Tree on Trivial Task
@@ -214,6 +219,12 @@ class TestInputEncoder:
         with pytest.raises(RuntimeError, match="fit"):
             enc.transform([{"x": 1.0}])
 
+    def test_transform_empty_sequence_batch_after_fit(self):
+        enc = InputEncoder()
+        enc.fit([[1, 2, 3]])
+        X = enc.transform([])
+        assert X.shape == (0, 8)
+
 
 # ===================================================================
 # 6. LabelEncoder
@@ -271,6 +282,25 @@ class TestModelHarnessE2E:
         config = ModelConfig(family=ModelFamily.RANDOM_FOREST, name="rf_v1")
         harness = ModelHarness(config)
         assert harness.model_name == "rf_v1"
+
+    def test_string_family_is_normalized(self):
+        config = ModelConfig(family="decision_tree")
+        assert config.family == ModelFamily.DECISION_TREE
+        harness = ModelHarness(config)
+        assert harness.model_name == "decision_tree"
+
+    def test_empty_test_split_returns_empty_predictions(self, threshold_split):
+        config = ModelConfig(family=ModelFamily.DECISION_TREE)
+        harness = ModelHarness(config)
+        result = harness.run(
+            threshold_split.train_inputs,
+            threshold_split.train_outputs,
+            [],
+            [],
+        )
+        assert result.predictions == []
+        assert result.true_labels == []
+        assert result.test_size == 0
 
 
 # ===================================================================
