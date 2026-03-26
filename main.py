@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 
+from src.sequence_experiments import run_all_sequence_experiments
 from src.smoke_tests import run_all_smoke_experiments
 
 
@@ -14,7 +15,7 @@ def main() -> int:
     parser.add_argument(
         "command",
         nargs="?",
-        choices=["smoke"],
+        choices=["smoke", "sequence"],
         default="smoke",
         help="Workflow to run. Defaults to the TASK-11 smoke suite.",
     )
@@ -27,8 +28,11 @@ def main() -> int:
 
     if args.command == "smoke":
         artifacts = run_all_smoke_experiments(output_root=args.output_root)
-        for experiment_id, artifact in artifacts.items():
-            print(f"{experiment_id}: {artifact.output_dir}")
+    elif args.command == "sequence":
+        artifacts = run_all_sequence_experiments(output_root=args.output_root)
+
+    for experiment_id, artifact in artifacts.items():
+        print(f"{experiment_id}: {artifact.output_dir}")
 
     return 0
 

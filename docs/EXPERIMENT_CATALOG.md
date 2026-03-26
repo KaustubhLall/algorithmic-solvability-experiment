@@ -1526,6 +1526,30 @@ Each entry follows this template:
 
 ---
 
+### DEV-010: TASK-12 runs the implemented S1-S3 sequence suite and keeps S4/S5 deferred
+
+- **Date:** 2026-03-26
+- **Task:** TASK-12 (EXP-S1, EXP-S2, EXP-S3, EXP-S4, EXP-S5)
+- **Type:** DEFERRAL
+- **What changed:** TASK-12 generated `results/EXP-S1`, `results/EXP-S2`, and `results/EXP-S3` for the currently registered sequence tiers only. `EXP-S4` and `EXP-S5` were not run.
+- **Why:** S4/S5 registry tasks are still deferred from TASK-04, and the current split/task infrastructure does not yet support the structural and DSL-program regimes required by those experiments.
+- **Impact:** Sequence-track baseline evidence is now available for the implemented tiers, but the stretch structural experiments and DSL-family sweep remain future work.
+- **Resolution:** Completed TASK-12 for S1-S3 and left S4/S5 explicitly deferred rather than creating placeholder artifacts.
+
+---
+
+### DEV-011: TASK-12 uses validated sequence model families and an available OOD split for EXP-S3
+
+- **Date:** 2026-03-26
+- **Task:** TASK-12 (EXP-S1, EXP-S2, EXP-S3)
+- **Type:** EXPERIMENT_CHANGE
+- **What changed:** The executed sequence suite uses `majority_class`, `sequence_baseline`, `mlp`, and `lstm` - the sequence-capable families currently validated in SR-5 - and EXP-S3 uses `value_extrapolation` instead of the cataloged composition split.
+- **Why:** Transformer support and composition/template split support are not yet implemented in SR-5/SR-4. Running only validated families/splits kept TASK-12 executable and reproducible.
+- **Impact:** `results/EXP-S1` through `results/EXP-S3` provide real baseline evidence today, but they do not yet answer the transformer-vs-LSTM or composition-generalization questions from the original catalog.
+- **Resolution:** Landed TASK-12 with the supported model/split surface and documented the missing capabilities for future tasks.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.

@@ -4,8 +4,8 @@
 > Read this first, then follow the links to detailed documents.
 > Update this document at the end of every chat session.
 >
-> **Last Updated:** 2026-03-25
-> **Current Phase:** Implementation - TASK-11 complete (SMOKE TEST gate cleared, TASK-12 next)
+> **Last Updated:** 2026-03-26
+> **Current Phase:** Implementation - TASK-12 complete (sequence baseline suite landed, TASK-13 next)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-12: Sequence Experiments |
+| **Next task to implement** | TASK-13: Classification Experiments |
 | **Status** | READY TO START |
-| **Blocked by** | Nothing - TASK-11 smoke gate is green |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-S1 to EXP-S5), Part 4 (TASK-12) |
+| **Blocked by** | Nothing - TASK-12 shipped and validation is green |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-C1 to EXP-C5), Part 4 (TASK-13) |
 
 ---
 
@@ -49,7 +49,7 @@
 | TASK-09 | Experiment Runner (SR-7) | **COMPLETE** | 36 V-7 tests pass. Multi-seed orchestration, aggregation, and serialization helpers in `src/runner.py`. See [log](implementation_log/TASK-09_experiment_runner.md) |
 | TASK-10 | Report Generator (SR-8) | **COMPLETE** | 9 V-8 tests pass. Structured artifacts, plots, markdown summaries, and solvability verdict logic in `src/reporting.py`. See [log](implementation_log/TASK-10_report_generator.md) |
 | TASK-11 | Smoke Tests (EXP-0.x) | **COMPLETE** | **GATE CLEARED.** `src/smoke_tests.py`, `main.py`, 7 V-Global tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. LSTM reaches 90.5% exact match on bounded sort; C1.1 smoke is MODERATE with perfect tree/logistic accuracy; control tasks are NEGATIVE. See [log](implementation_log/TASK-11_smoke_tests.md) |
-| TASK-12 | Sequence Experiments | NOT STARTED | Depends on TASK-11 |
+| TASK-12 | Sequence Experiments | **COMPLETE** | Added `src/sequence_experiments.py`, CLI support in `main.py`, `tests/test_sequence_experiments.py`, refreshed smoke-compatible LSTM handling for unseen tokens, and generated `results/EXP-S1` through `results/EXP-S3`. Current sequence verdicts are mostly NEGATIVE, with WEAK evidence on `S1.4_count_symbol` and `S2.2_balanced_parens`. See [log](implementation_log/TASK-12_sequence_experiments.md) |
 | TASK-13 | Classification Experiments | NOT STARTED | Depends on TASK-11 |
 | TASK-14 | Diagnostic Experiments | NOT STARTED | Depends on TASK-12-13 |
 | TASK-15 | Bonus: Algorithm Discovery | NOT STARTED | Depends on TASK-14 |
@@ -59,6 +59,7 @@
 - `[x]` DATA PIPELINE complete (TASK-05-06 done + V-3, V-4 passing)
 - `[x]` FULL PIPELINE complete (TASK-07-10 done + V-5 through V-8 passing)
 - `[x]` SMOKE TEST GATE cleared (TASK-11 done + V-G1-G4 passing)
+- `[x]` SEQUENCE BASELINE SUITE complete (TASK-12 done for implemented S1-S3 tiers + `results/EXP-S1` through `results/EXP-S3`)
 
 ---
 
@@ -94,6 +95,7 @@ DataScience/
 |   |-- runner.py                     # SR-7 built
 |   |-- reporting.py                  # SR-8 built
 |   |-- smoke_tests.py                # TASK-11 smoke experiment specs + runners
+|   |-- sequence_experiments.py       # TASK-12 sequence experiment specs + runners
 |   |-- dsl/
 |   |   |-- __init__.py
 |   |   |-- classification_dsl.py     # SR-9 built
@@ -114,6 +116,7 @@ DataScience/
 |   |-- test_runner.py                # V-7: 36 tests
 |   |-- test_reporting.py             # V-8: 9 tests
 |   `-- test_smoke_tests.py           # V-G1..V-G4: 7 tests
+|   `-- test_sequence_experiments.py  # TASK-12 sequence experiment coverage
 |-- results/
 |-- conftest.py
 |-- requirements.txt
@@ -133,6 +136,8 @@ DataScience/
 - **DEV-007:** `ExperimentSpec` uses `n_samples` + `train_fraction` rather than separate train/test sample counts.
 - **DEV-008:** Solvability verdicts are operationalized from currently available SR-7 metrics (IID/OOD accuracy, baseline gap, seed stability, robustness splits) while unavailable evidence criteria remain explicitly marked unmet.
 - **DEV-009:** TASK-11 classification smoke calibration expands EXP-0.2 beyond the original single-seed IID spec so the current verdict logic can evaluate baseline separation, extrapolation, and seed stability; under the current operationalization, V-G3 is satisfied by `MODERATE` or better rather than requiring `STRONG`.
+- **DEV-010:** TASK-12 executes the currently implemented sequence tiers (`EXP-S1` through `EXP-S3`) and keeps `EXP-S4`/`EXP-S5` deferred until their registry tasks and split strategies exist.
+- **DEV-011:** TASK-12 sequence runs use the currently validated model families (`majority_class`, `sequence_baseline`, `mlp`, `lstm`) and replace EXP-S3's cataloged composition split with the available value-range extrapolation split until transformer/composition support lands.
 
 See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 

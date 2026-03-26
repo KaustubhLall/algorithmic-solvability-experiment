@@ -380,8 +380,11 @@ class LSTMSequenceModel(BaseModel):
         self._random_state = random_state
 
         self._pad_idx = 0
+        self._unk_idx = 1
         self._token_offset = 1
         self._max_output_len = 0
+        self._input_vocab_size = 0
+        self._output_vocab_size = 0
         self._same_length_outputs = False
         self._trained = False
         self._network: Any = None
@@ -403,7 +406,10 @@ class LSTMSequenceModel(BaseModel):
         min_token = min(all_tokens)
         max_token = max(all_tokens)
         self._token_offset = 1 - min_token if min_token <= 0 else 1
-        vocab_size = max_token + self._token_offset + 1
+        base_vocab_size = max_token + self._token_offset + 1
+        self._unk_idx = base_vocab_size
+        self._input_vocab_size = base_vocab_size + 1
+        self._output_vocab_size = base_vocab_size
         self._max_output_len = max(len(seq) for seq in train_outputs)
         self._same_length_outputs = all(
             len(inp) == len(out)
@@ -422,8 +428,8 @@ class LSTMSequenceModel(BaseModel):
         )
 
         sequence_net = _SequenceLSTMNet(
-            vocab_size=vocab_size,
-            output_vocab_size=vocab_size,
+            vocab_size=self._input_vocab_size,
+            output_vocab_size=self._output_vocab_size,
             max_output_len=self._max_output_len,
             pad_idx=self._pad_idx,
             embedding_dim=self._embedding_dim,
@@ -452,7 +458,7 @@ class LSTMSequenceModel(BaseModel):
                 optimizer.zero_grad()
                 logits = self._network(batch_inputs, batch_lengths)
                 loss = nn.functional.cross_entropy(
-                    logits.reshape(-1, vocab_size),
+                    logits.reshape(-1, self._output_vocab_size),
                     batch_targets.reshape(-1),
                     ignore_index=self._pad_idx,
                 )
@@ -542,7 +548,11 @@ class LSTMSequenceModel(BaseModel):
 
     def _encode_token(self, token: int) -> int:
         encoded = token + self._token_offset
-        return encoded if encoded > self._pad_idx else self._pad_idx
+        if encoded <= self._pad_idx:
+            return self._pad_idx
+        if self._input_vocab_size and encoded >= self._unk_idx:
+            return self._unk_idx
+        return encoded
 
     def _first_pad_index(self, encoded_sequence: List[int]) -> int:
         for idx, token in enumerate(encoded_sequence):

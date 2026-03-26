@@ -5,7 +5,7 @@
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2026-03-25 (TASK-11 complete, smoke gate green, full suite green)
+> **Last Updated:** 2026-03-26 (TASK-12 complete, sequence suite artifacts generated, full suite green)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -33,6 +33,7 @@
 | TASK-09 | Experiment Runner (SR-7) | 2026-03-25 | [log](implementation_log/TASK-09_experiment_runner.md) | Multi-seed experiment orchestration, aggregation, progress logging, and JSON-ready serialization in `src/runner.py`. 36 V-7 tests pass. |
 | TASK-10 | Report Generator (SR-8) | 2026-03-25 | [log](implementation_log/TASK-10_report_generator.md) | Structured experiment artifact writing, per-task metrics/errors JSON, markdown summaries, plots, and solvability verdict computation in `src/reporting.py`. 9 V-8 tests pass. |
 | TASK-11 | Smoke Tests (EXP-0.x) | 2026-03-25 | [log](implementation_log/TASK-11_smoke_tests.md) | Added `src/smoke_tests.py`, a CLI entrypoint in `main.py`, a raw-sequence LSTM path in `src/models/harness.py`, 7 V-Global smoke tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. |
+| TASK-12 | Sequence Experiments | 2026-03-26 | [log](implementation_log/TASK-12_sequence_experiments.md) | Added `src/sequence_experiments.py`, `main.py sequence`, `tests/test_sequence_experiments.py`, unseen-token-safe LSTM inference, and generated `results/EXP-S1` through `results/EXP-S3` for the implemented S1-S3 sequence tiers. |
 
 ---
 
@@ -60,6 +61,9 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 - **Per-task plots can be generated from reports alone.** Averaging stored confusion matrices and plotting aggregated accuracy by split was enough for V-8; no raw dataset replay was necessary.
 - **Smoke-task data shaping is best handled outside the global registry.** EXP-0.1 needs sort sequences bounded to length 4-8, but the benchmark task definition stays broader. Cloning that task into a smoke-local registry preserved the benchmark while matching the cataloged smoke regime.
 - **Current solvability calibration needs richer smoke evidence for classification.** Under ADR-017, IID-only single-seed trivial tasks can at best look WEAK. TASK-11 therefore expanded EXP-0.2 with a baseline, a noise split, and 5 seeds so V-G3 can validate the currently measurable minimum evidence and land at MODERATE.
+- **Sequence experiments need experiment-specific split menus.** Binary/stateful tasks such as `S2.1_cumulative_xor` and `S2.2_balanced_parens` do not have a meaningful value-range extrapolation regime, so TASK-12 keeps EXP-S2 on IID + length extrapolation only.
+- **Value extrapolation needs explicit unseen-token handling for neural sequence models.** The raw-sequence LSTM now maps unseen test-time tokens into an input-only unknown bucket so EXP-S1/EXP-S3 value-range runs complete instead of crashing.
+- **The current sequence baseline suite is mostly negative at today's supported scale.** Across `results/EXP-S1` through `results/EXP-S3`, only `S1.4_count_symbol` and `S2.2_balanced_parens` reached WEAK evidence; most other sequence tasks remained NEGATIVE under the present models/sample budgets.
 
 ---
 
@@ -67,7 +71,7 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. TASK-12 (Sequence Experiments) is ready to start._
+_None. TASK-13 (Classification Experiments) is ready to start._
 
 ---
 
@@ -92,4 +96,4 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-G3 | Trivial task ceiling | **PASS** | `EXP-0.2` decision tree/logistic regression reach 100% accuracy; verdict is MODERATE under current operationalization |
 | V-G4 | Data-model isolation | **PASS** | Runner smoke validation confirms fresh per-task dataset generation |
 
-Full suite status: **403 tests passing**.
+Full suite status: **414 tests passing**.

@@ -310,3 +310,19 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 3 - `src/smoke_tests.py` builds a smoke-local registry that reuses the same `task_id` and algorithm while swapping in a bounded 4-8 sequence schema.
 - **Rationale:** The smoke suite needs the cataloged regime, but the wider benchmark task definition should remain intact for later experiment tasks.
 - **Consequences:** TASK-11 stays faithful to the smoke spec without changing SR-1 globally. If later tasks need many experiment-specific task variants, SR-7 can grow a more general override mechanism.
+
+---
+
+### ADR-020: Add an input-only unknown-token bucket for sequence LSTM extrapolation
+
+- **Date:** 2026-03-26
+- **Task:** TASK-12
+- **Status:** ACCEPTED
+- **Context:** TASK-12 introduces value-range extrapolation runs for sequence tasks. The raw-sequence LSTM from TASK-11 built its vocabulary only from training tokens, so value-extrapolated runs could crash at inference when test inputs contained unseen values.
+- **Options considered:**
+  1. Skip neural value-extrapolation runs whenever unseen tokens appear
+  2. Expand the LSTM vocabulary from both train and test tokens
+  3. Keep the training vocabulary fixed and map unseen test-time input tokens into an explicit unknown bucket
+- **Decision:** Option 3 - add an input-only unknown-token bucket for `LSTMSequenceModel` while keeping the output vocabulary tied to train-time targets.
+- **Rationale:** This preserves the integrity of the train/test boundary, avoids inference crashes, and keeps smoke-task behavior recoverable with targeted hyperparameter tuning.
+- **Consequences:** Value-range sequence runs now complete cleanly, but the current LSTM still cannot generate exact unseen output symbols without a stronger copy/pointer mechanism.
