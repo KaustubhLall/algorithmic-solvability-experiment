@@ -7,7 +7,7 @@
 > Read alongside `EXPERIMENT_DESIGN.md` which provides the rationale and theory.
 > All implementation work should be traceable back to entries in this file.
 >
-> **Last Updated:** 2025-03-25
+> **Last Updated:** 2026-03-25
 
 ---
 
@@ -1490,6 +1490,18 @@ Each entry follows this template:
 
 ---
 
+### DEV-007: ExperimentSpec uses total sample count plus train fraction
+
+- **Date:** 2026-03-25
+- **Task:** TASK-09 (SR-7)
+- **Type:** INTERFACE_CHANGE
+- **What changed:** The SR-7 spec proposed `n_train_samples` and `n_test_samples` on `ExperimentSpec`. The implementation uses `n_samples` plus `train_fraction`, and split-specific code derives the realized train/test sizes from the generated dataset. It also carries `split_metadata` on per-run results to record the effective split parameters.
+- **Why:** This matches the implemented SR-3 and SR-4 interfaces, which operate on complete datasets and then split them. Reusing one generated dataset per task/seed also keeps split comparisons paired.
+- **Impact:** SR-8 should consume `n_samples`, `train_fraction`, `seeds_used`, and per-run `split_metadata` when writing reports. Exact per-split sample counts are still available on each `SingleRunResult`.
+- **Resolution:** Accepted for TASK-09 and documented in the task log plus ADR-016.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
@@ -1509,7 +1521,7 @@ Major architectural or design decisions made during implementation that are not 
 
 ### Entries
 
-_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-013._
+_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-016._
 
 ---
 
