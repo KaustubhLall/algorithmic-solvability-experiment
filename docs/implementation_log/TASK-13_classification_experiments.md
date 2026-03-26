@@ -145,6 +145,12 @@ Each experiment includes:
 - Generated `results/EXP-C1` through `results/EXP-C3`
 - Verified per-experiment summaries and solvability verdicts after artifact generation
 
+## Post-Review Follow-up
+
+- Addressed PR review feedback before merge by tightening the schema typing on tabular noise helpers from `Optional[Any]` to `Optional[TabularInputSchema]`.
+- Updated the categorical-noise regression test to derive allowed values from `task.input_schema` instead of hard-coding the current domain.
+- Fixed `src/runner.py`'s `_apply_split()` docstring so the `task` argument and its schema-guided noise behavior are documented accurately.
+
 ## Key Implementation Decisions
 
 - Used task-schema-guided categorical flips inside the `NOISE` split so categorical classification tasks get a real robustness regime instead of an IID duplicate.

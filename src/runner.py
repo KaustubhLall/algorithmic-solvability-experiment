@@ -157,6 +157,8 @@ def _apply_split(
 
     Args:
         dataset: The generated dataset.
+        task: Task metadata used to choose split-specific behavior such as
+            schema-guided categorical noise.
         strategy: Which split strategy to use.
         spec: Experiment spec (for split parameters).
         seed: Random seed.

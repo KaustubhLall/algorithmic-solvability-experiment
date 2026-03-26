@@ -235,7 +235,7 @@ class SplitGenerator:
         train_fraction: float = 0.8,
         test_noise_level: float = 0.1,
         seed: int = 42,
-        schema: Optional[Any] = None,
+        schema: Optional[TabularInputSchema] = None,
     ) -> SplitResult:
         """IID split where test inputs have added noise.
 
@@ -247,6 +247,8 @@ class SplitGenerator:
             train_fraction: Fraction for training.
             test_noise_level: Noise level applied to test inputs.
             seed: Random seed.
+            schema: Optional tabular schema used to sample valid categorical
+                perturbations for tabular inputs.
 
         Returns:
             SplitResult with noisy test inputs.
@@ -293,7 +295,7 @@ class SplitGenerator:
         inp: Any,
         noise_level: float,
         rng: np.random.Generator,
-        schema: Optional[Any] = None,
+        schema: Optional[TabularInputSchema] = None,
     ) -> Any:
         """Add noise to an input."""
         if isinstance(inp, list):
@@ -347,9 +349,13 @@ def split_value(dataset: Dataset, feature_name: str, train_range: Tuple[float, f
     return SplitGenerator().split_value_extrapolation(dataset, feature_name, train_range)
 
 
-def split_noise(dataset: Dataset, train_fraction: float = 0.8,
-                test_noise_level: float = 0.1, seed: int = 42,
-                schema: Optional[Any] = None) -> SplitResult:
+def split_noise(
+    dataset: Dataset,
+    train_fraction: float = 0.8,
+    test_noise_level: float = 0.1,
+    seed: int = 42,
+    schema: Optional[TabularInputSchema] = None,
+) -> SplitResult:
     return SplitGenerator().split_with_noise(
         dataset,
         train_fraction,

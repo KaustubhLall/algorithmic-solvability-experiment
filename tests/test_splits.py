@@ -289,6 +289,12 @@ class TestClassificationSplits:
         registry,
     ):
         task = registry.get("C1.3_categorical_match")
+        cat1_spec = next(
+            feature
+            for feature in task.input_schema.categorical_features
+            if feature.name == "cat1"
+        )
+        allowed_values = set(cat1_spec.values)
         result = split_noise(
             categorical_match_dataset,
             test_noise_level=1.0,
@@ -301,7 +307,7 @@ class TestClassificationSplits:
             clean = task.input_sampler(s.seed)
             expected = task.reference_algorithm(clean)
             assert s.output_data == expected
-            assert s.input_data["cat1"] in {"A", "B", "C"}
+            assert s.input_data["cat1"] in allowed_values
             if s.input_data != clean:
                 modified += 1
 
