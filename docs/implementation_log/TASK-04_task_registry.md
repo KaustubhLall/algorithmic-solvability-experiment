@@ -29,7 +29,7 @@
 - **`TaskSpec` dataclass** — Each task exposes a standard interface: `task_id`, `tier`, `track`, `description`, `input_schema`, `output_type`, `n_classes`, `reference_algorithm` (callable), `input_sampler` (callable), `verifier` (callable), `complexity_metadata` (dict).
 - **Callable-based interface** — `reference_algorithm`, `input_sampler`, and `verifier` are plain callables (functions/lambdas), not class instances. This keeps the interface minimal and avoids unnecessary abstraction.
 - **28 tasks across 8 tiers** — S0 (2 control tasks), S1 (8 simple transforms), S2 (4 stateful), S3 (3 multi-step), C0 (2 controls), C1 (5 single-rule), C2 (5 multi-feature), C3 (3 interaction).
-- **S0 control tasks use deterministic hash-based pseudo-randomness** — `S0.1_random_labels` uses `hash(tuple(inp)) % 2**32` as a seed to generate "random" but deterministic outputs. This ensures reproducibility while being unlearnable.
+- **S0 control tasks use deterministic hash-based pseudo-randomness** — `S0.1_random_labels` uses a stable content hash as a seed to generate "random" but deterministic outputs. This keeps the task reproducible across processes and machines while remaining unlearnable.
 - **`build_default_registry()`** — Factory function that builds and populates the registry with all standard tasks. Each tier has its own builder function (`_build_s0_tasks()`, etc.) for organization.
 
 ### Registered Tasks
@@ -77,4 +77,4 @@ V-1 validation: **34 tests, all passing** (pytest, 0.22s)
 
 ## Completion Summary
 
-TASK-04 delivered the Task Registry in `src/registry.py` (684 lines). The registry holds 28 tasks across 8 tiers (S0–S3, C0–C3), each with a standard interface exposing input schema, reference algorithm, sampler, and verifier. All 34 V-1 tests pass, covering structure, completeness, determinism, input validity, verifier agreement, output types, spot checks, and reproducibility. This completes the FOUNDATION milestone (TASK-01–04). One deviation: S4/S5/C4/C5 tiers deferred to experiment implementation phase.
+TASK-04 delivered the Task Registry in `src/registry.py`. The registry holds 28 tasks across 8 tiers (S0–S3, C0–C3), each with a standard interface exposing input schema, reference algorithm, sampler, and verifier. All 34 V-1 tests pass, covering structure, completeness, determinism, input validity, verifier agreement, output types, spot checks, and reproducibility. This completes the FOUNDATION milestone (TASK-01–04). One deviation: S4/S5/C4/C5 tiers deferred to experiment implementation phase.

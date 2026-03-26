@@ -70,4 +70,4 @@ V-4 validation: **29 tests, all passing** (pytest, 0.12s)
 
 ## Completion Summary
 
-TASK-06 delivered the Split Generator in `src/splits.py` (309 lines). Four split strategies are implemented: IID random, length extrapolation, value extrapolation, and noise injection. All 29 V-4 tests pass. This completes the DATA PIPELINE milestone (TASK-05–06). One deviation: DistractorSplit deferred to experiment phase. The Split Generator feeds directly into the Model Harness (TASK-07) via `SplitResult` accessors.
+TASK-06 delivered the Split Generator in `src/splits.py`. Four split strategies are implemented: IID random, length extrapolation, value extrapolation, and noise injection. All 29 V-4 tests pass. This completes the DATA PIPELINE milestone (TASK-05–06). One deviation: DistractorSplit deferred to experiment phase. The Split Generator feeds directly into the Model Harness (TASK-07) via `SplitResult` accessors.

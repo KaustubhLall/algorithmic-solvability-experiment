@@ -53,6 +53,7 @@ def _classification_eval_report(
     split_name: str,
     accuracy: float,
     confusion_matrix: list[list[int]] | None = None,
+    class_labels: list[str] | None = None,
     error_taxonomy: dict[str, int] | None = None,
 ) -> EvalReport:
     return EvalReport(
@@ -65,7 +66,11 @@ def _classification_eval_report(
         macro_f1=accuracy,
         weighted_f1=accuracy,
         confusion_matrix=confusion_matrix,
-        class_labels=["A", "B"] if confusion_matrix is not None else None,
+        class_labels=(
+            class_labels
+            if class_labels is not None
+            else (["A", "B"] if confusion_matrix is not None else None)
+        ),
         exact_match=None,
         token_accuracy=None,
         error_taxonomy=error_taxonomy or {"correct": int(round(accuracy * 20)), "wrong_class": 20 - int(round(accuracy * 20)), "unknown_class": 0},
@@ -100,6 +105,7 @@ def _single(
     seed: int,
     accuracy: float,
     confusion_matrix: list[list[int]] | None = None,
+    class_labels: list[str] | None = None,
 ) -> SingleRunResult:
     return SingleRunResult(
         task_id=task_id,
@@ -111,6 +117,7 @@ def _single(
             split_name=f"{split}_seed{seed}",
             accuracy=accuracy,
             confusion_matrix=confusion_matrix,
+            class_labels=class_labels,
         ),
         train_size=80,
         test_size=20,
@@ -210,6 +217,45 @@ class TestGenerateReportArtifacts:
     def test_backward_compatible_artifact_alias(self, sample_experiment_report, registry, tmp_path):
         out_dir = generate_report_artifacts(sample_experiment_report, output_root=tmp_path, registry=registry)
         assert out_dir == tmp_path / "TEST-REPORTING"
+
+    def test_confusion_plot_aligns_runs_with_different_label_sets(
+        self,
+        report_spec,
+        registry,
+        tmp_path,
+    ):
+        report = ExperimentReport(
+            experiment_id=report_spec.experiment_id,
+            spec=report_spec,
+            seeds_used=[11, 22],
+            single_results=[
+                _single(
+                    "C1.1_numeric_threshold",
+                    "decision_tree",
+                    "iid",
+                    11,
+                    0.95,
+                    [[9, 1], [0, 10]],
+                    class_labels=["A", "B"],
+                ),
+                _single(
+                    "C1.1_numeric_threshold",
+                    "decision_tree",
+                    "iid",
+                    22,
+                    0.90,
+                    [[9, 0, 0], [0, 0, 1], [0, 0, 0]],
+                    class_labels=["A", "B", "UNKNOWN"],
+                ),
+            ],
+            aggregated_results=[
+                _agg("C1.1_numeric_threshold", "decision_tree", "iid", 0.925, std=0.035, n_seeds=2),
+            ],
+            total_time_seconds=0.5,
+        )
+
+        out_dir = generate_report(report, output_root=tmp_path, registry=registry)
+        assert (out_dir / "per_task" / "C1.1_numeric_threshold" / "confusion.png").exists()
 
 
 class TestVerdictLogic:

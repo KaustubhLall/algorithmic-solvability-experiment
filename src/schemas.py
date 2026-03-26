@@ -10,7 +10,7 @@ Validated by: V-2 (Input Schema Validation).
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -111,9 +111,10 @@ class CategoricalFeatureSpec:
 
     Attributes:
         name: Feature name (unique within a schema).
-        values: List of possible categorical values.
+        values: Tuple of possible categorical values.
         distribution: "uniform" or "weighted".
-        weights: Probability weights (must sum to 1 if provided). Required when distribution is WEIGHTED.
+        weights: Tuple of probability weights (must sum to 1 if provided).
+            Required when distribution is WEIGHTED.
     """
     name: str
     values: Tuple[str, ...]
@@ -135,13 +136,17 @@ class CategoricalFeatureSpec:
                     f"CategoricalFeatureSpec '{self.name}': "
                     f"weights length ({len(self.weights)}) != values length ({len(self.values)})"
                 )
-            if not math.isclose(sum(self.weights), 1.0, rel_tol=1e-6):
+            if any(not math.isfinite(weight) for weight in self.weights):
                 raise ValueError(
-                    f"CategoricalFeatureSpec '{self.name}': weights must sum to 1.0, got {sum(self.weights)}"
+                    f"CategoricalFeatureSpec '{self.name}': weights must be finite"
                 )
             if any(weight < 0 for weight in self.weights):
                 raise ValueError(
                     f"CategoricalFeatureSpec '{self.name}': weights must be non-negative"
+                )
+            if not math.isclose(sum(self.weights), 1.0, rel_tol=1e-6):
+                raise ValueError(
+                    f"CategoricalFeatureSpec '{self.name}': weights must sum to 1.0, got {sum(self.weights)}"
                 )
         if self.distribution not in (Distribution.UNIFORM, Distribution.WEIGHTED):
             raise ValueError(
@@ -171,7 +176,10 @@ class CategoricalFeatureSpec:
             idx = int(rng.integers(0, len(self.values)))
             return self.values[idx]
         elif self.distribution == Distribution.WEIGHTED:
-            assert self.weights is not None
+            if self.weights is None:
+                raise ValueError(
+                    f"CategoricalFeatureSpec '{self.name}': weights required for WEIGHTED distribution"
+                )
             idx = int(rng.choice(len(self.values), p=list(self.weights)))
             return self.values[idx]
         else:
@@ -197,7 +205,7 @@ class SequenceInputSchema:
         min_length: Minimum sequence length (inclusive, >= 1).
         max_length: Maximum sequence length (inclusive).
         value_range: (low, high) inclusive range for int/binary elements.
-        alphabet: List of valid characters/tokens for char-type elements.
+        alphabet: Tuple of valid characters/tokens for char-type elements.
     """
     element_type: ElementType
     min_length: int
@@ -278,7 +286,8 @@ class SequenceInputSchema:
         elif self.element_type == ElementType.BINARY:
             return [int(x) for x in rng.integers(0, 2, size=length)]
         elif self.element_type == ElementType.CHAR:
-            assert self.alphabet is not None
+            if self.alphabet is None:
+                raise ValueError("alphabet is required for char element_type")
             indices = rng.integers(0, len(self.alphabet), size=length)
             return [self.alphabet[int(i)] for i in indices]
         else:
@@ -307,7 +316,8 @@ class SequenceInputSchema:
                 if elem not in (0, 1):
                     return False
             elif self.element_type == ElementType.CHAR:
-                assert self.alphabet is not None
+                if self.alphabet is None:
+                    return False
                 if elem not in self.alphabet:
                     return False
         return True
@@ -425,15 +435,17 @@ class TabularInputSchema:
                 return False
             val = inp[spec.name]
             if spec.is_numerical:
-                if not isinstance(val, (int, float)):
+                if not isinstance(val, spec.expected_type):
                     return False
-                assert isinstance(spec, NumericalFeatureSpec)
-                if not (spec.min_val <= val <= spec.max_val):
+                if not isinstance(spec, NumericalFeatureSpec):
+                    return False
+                if not (spec.min_val <= float(val) <= spec.max_val):
                     return False
             elif spec.is_categorical:
                 if not isinstance(val, str):
                     return False
-                assert isinstance(spec, CategoricalFeatureSpec)
+                if not isinstance(spec, CategoricalFeatureSpec):
+                    return False
                 if val not in spec.values:
                     return False
         return True

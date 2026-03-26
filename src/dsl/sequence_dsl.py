@@ -27,7 +27,6 @@ import numpy as np
 class SeqType(str, Enum):
     """Types in the sequence DSL."""
     LIST_INT = "list[int]"
-    INT = "int"
 
 
 # ===================================================================
@@ -447,13 +446,6 @@ REDUCER_OPS: List[type] = [
     Sum, Count, Max, Min, Parity,
 ]
 
-ALL_LEAF_TYPES = LEAF_OPS_LIST_TO_LIST + PARAMETERIZED_OPS + REDUCER_OPS
-
-
-# ===================================================================
-# Program Sampler
-# ===================================================================
-
 def _sample_leaf_op(rng: np.random.Generator, allow_reducers: bool = True) -> SeqOp:
     """Sample a random leaf operation."""
     if allow_reducers:
@@ -546,10 +538,11 @@ def sample_programs_batch(
     """
     programs = []
     for i in range(n):
+        program_seed = seed + i
         prog = sample_program(
-            seed=seed + i,
+            seed=program_seed,
             max_depth=max_depth,
-            program_id=f"prog_{i}_d{max_depth}",
+            program_id=f"prog_s{program_seed}_d{max_depth}",
         )
         programs.append(prog)
     return programs

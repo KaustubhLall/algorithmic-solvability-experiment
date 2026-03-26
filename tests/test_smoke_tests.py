@@ -161,7 +161,7 @@ class TestGlobalValidation:
             observed_calls.append(
                 {
                     "task_id": task.task_id,
-                    "dataset_id": id(dataset),
+                    "dataset": dataset,
                     "sample_task_ids": {sample.task_id for sample in dataset.samples},
                 }
             )
@@ -184,7 +184,7 @@ class TestGlobalValidation:
             "C1.1_numeric_threshold",
             "C0.1_random_class",
         ]
-        assert len({call["dataset_id"] for call in observed_calls}) == 2
+        assert observed_calls[0]["dataset"] is not observed_calls[1]["dataset"]
         assert observed_calls[0]["sample_task_ids"] == {"C1.1_numeric_threshold"}
         assert observed_calls[1]["sample_task_ids"] == {"C0.1_random_class"}
 

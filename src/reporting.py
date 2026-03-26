@@ -387,25 +387,44 @@ def _aggregate_error_taxonomies(task_single_results: List[SingleRunResult]) -> D
 
 
 def _mean_confusion_matrix(results: List[SingleRunResult]) -> Optional[np.ndarray]:
-    matrices: List[np.ndarray] = []
+    label_order: List[str] = []
+    aligned_matrices: List[np.ndarray] = []
     for result in results:
         cm = result.eval_report.confusion_matrix
+        labels = result.eval_report.class_labels
         if cm is None:
+            continue
+        if labels is None or len(labels) == 0:
             continue
         arr = np.array(cm, dtype=float)
         if arr.size == 0 or arr.ndim != 2:
             continue
-        matrices.append(arr)
+        if arr.shape != (len(labels), len(labels)):
+            continue
 
-    if not matrices:
+        for label in labels:
+            if label not in label_order:
+                label_order.append(label)
+
+        aligned = np.zeros((len(label_order), len(label_order)), dtype=float)
+        label_to_index = {label: idx for idx, label in enumerate(label_order)}
+        for row_idx, true_label in enumerate(labels):
+            for col_idx, pred_label in enumerate(labels):
+                aligned[label_to_index[true_label]][label_to_index[pred_label]] = arr[row_idx][col_idx]
+
+        if aligned_matrices:
+            expanded: List[np.ndarray] = []
+            for matrix in aligned_matrices:
+                expanded_matrix = np.zeros((len(label_order), len(label_order)), dtype=float)
+                expanded_matrix[: matrix.shape[0], : matrix.shape[1]] = matrix
+                expanded.append(expanded_matrix)
+            aligned_matrices = expanded
+
+        aligned_matrices.append(aligned)
+
+    if not aligned_matrices:
         return None
-
-    target_shape = matrices[0].shape
-    compatible = [matrix for matrix in matrices if matrix.shape == target_shape]
-    if not compatible:
-        return None
-
-    return np.mean(compatible, axis=0)
+    return np.mean(aligned_matrices, axis=0)
 
 
 def _save_confusion_plot(task_dir: Path, task_results: List[SingleRunResult]) -> Optional[str]:
@@ -429,7 +448,11 @@ def _save_confusion_plot(task_dir: Path, task_results: List[SingleRunResult]) ->
     if mean_cm is None or mean_cm.size == 0 or mean_cm.ndim != 2:
         return None
 
-    labels = selected_runs[0].eval_report.class_labels or []
+    labels = list(selected_runs[0].eval_report.class_labels or [])
+    for result in selected_runs[1:]:
+        for label in result.eval_report.class_labels or []:
+            if label not in labels:
+                labels.append(label)
     fig, ax = plt.subplots(figsize=(5, 4))
     sns.heatmap(mean_cm, annot=True, fmt=".2f", cmap="Blues", ax=ax, cbar=False)
     ax.set_xlabel("Predicted")

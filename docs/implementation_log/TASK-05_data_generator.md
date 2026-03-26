@@ -60,4 +60,4 @@ _None. Implementation follows SR-3 spec._
 
 ## Completion Summary
 
-TASK-05 delivered the Data Generator in `src/data_generator.py` (269 lines). The generator produces labeled datasets from any registered task, with label re-verification at generation time, noise injection (inputs only), multi-task support, and class balance computation. All 23 V-3 tests pass. The generator is the primary input to TASK-06 (Split Generator) and feeds all downstream pipeline components.
+TASK-05 delivered the Data Generator in `src/data_generator.py`. The generator produces labeled datasets from any registered task, with label re-verification at generation time, noise injection (inputs only), multi-task support, and class balance computation. All 23 V-3 tests pass. The generator is the primary input to TASK-06 (Split Generator) and feeds all downstream pipeline components.

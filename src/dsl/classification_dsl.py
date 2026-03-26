@@ -11,16 +11,14 @@ Validated by: V-9 (Classification Rule DSL Validation).
 
 from __future__ import annotations
 
-import math
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
 from src.schemas import (
     CategoricalFeatureSpec,
-    Distribution,
     NumericalFeatureSpec,
     TabularInputSchema,
 )
@@ -482,6 +480,13 @@ class AggregateClassifier(Classifier):
 
     def evaluate_group(self, rows: List[Dict[str, Any]]) -> str:
         """Classify a group of rows."""
+        if self.group_key is not None and rows:
+            group_values = {row.get(self.group_key) for row in rows}
+            if len(group_values) > 1:
+                raise ValueError(
+                    f"AggregateClassifier expected a single '{self.group_key}' group, "
+                    f"got {sorted(group_values, key=repr)}"
+                )
         agg_val = self.aggregator.evaluate(rows)
         virtual_row = {self.virtual_feature_name: agg_val}
         return self.inner_classifier.evaluate(virtual_row)
@@ -495,7 +500,10 @@ class AggregateClassifier(Classifier):
         return 1 + self.inner_classifier.depth()
 
     def features_used(self) -> set[str]:
-        return self.aggregator.features_used() | self.inner_classifier.features_used()
+        features = self.aggregator.features_used() | self.inner_classifier.features_used()
+        if self.group_key is not None:
+            features.add(self.group_key)
+        return features
 
     def classes(self) -> set[str]:
         return self.inner_classifier.classes()

@@ -138,6 +138,15 @@ class TestConstructionValidation:
                 weights=(1.1, -0.1),
             )
 
+    def test_categorical_non_finite_weight_raises(self):
+        with pytest.raises(ValueError, match="finite"):
+            CategoricalFeatureSpec(
+                name="bad",
+                values=("a", "b"),
+                distribution=Distribution.WEIGHTED,
+                weights=(float("nan"), 1.0),
+            )
+
     def test_categorical_invalid_distribution_raises(self):
         with pytest.raises(ValueError, match="UNIFORM or WEIGHTED"):
             CategoricalFeatureSpec(name="bad", values=("a", "b"), distribution=Distribution.NORMAL)

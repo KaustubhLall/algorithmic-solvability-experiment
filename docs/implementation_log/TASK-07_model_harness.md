@@ -70,11 +70,11 @@ V-5 validation: **39 tests, all passing** (pytest)
 
 - **Type:** STRUCTURE_CHANGE (minor)
 - **What changed:** The planned file structure had `src/models/harness.py`, `src/models/configs.py`, and `src/models/encoders.py`. Implementation puts everything in `harness.py`.
-- **Why:** The total code is 459 lines — splitting into 3 files would create unnecessary import complexity. Will refactor if the file grows significantly.
+- **Why:** The total code volume was still manageable in one place, so splitting into 3 files would create unnecessary import complexity. Will refactor if the file grows significantly.
 - **Impact:** All imports come from `src.models.harness`. No impact on API.
 
 ---
 
 ## Completion Summary
 
-TASK-07 delivered the Model Harness in `src/models/harness.py` (459 lines). The harness provides a unified encode → train → predict → decode pipeline supporting 8 model families (from majority-class baseline to gradient boosted trees and MLPs). All 33 V-5 tests pass, including a decision tree achieving perfect accuracy on the trivial C1.1 threshold task. One deviation: all model code is in a single file instead of the planned 3-file split. The harness is consumed by TASK-08 (Evaluation Engine) and TASK-09 (Experiment Runner).
+TASK-07 delivered the Model Harness in `src/models/harness.py`. The harness provides a unified encode → train → predict → decode pipeline supporting 8 model families (from majority-class baseline to gradient boosted trees and MLPs). All 33 V-5 tests pass, including a decision tree achieving perfect accuracy on the trivial C1.1 threshold task. One deviation: all model code is in a single file instead of the planned 3-file split. The harness is consumed by TASK-08 (Evaluation Engine) and TASK-09 (Experiment Runner).

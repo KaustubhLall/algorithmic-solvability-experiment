@@ -86,21 +86,21 @@ DataScience/
 |       `-- TASK-11_smoke_tests.md
 |-- src/
 |   |-- __init__.py
-|   |-- schemas.py                    # SR-2 built (340 lines)
-|   |-- registry.py                   # SR-1 built (684 lines, 28 tasks)
-|   |-- data_generator.py             # SR-3 built (269 lines)
-|   |-- splits.py                     # SR-4 built (309 lines)
-|   |-- evaluation.py                 # SR-6 built (380 lines)
-|   |-- runner.py                     # SR-7 built (399 lines)
-|   |-- reporting.py                  # SR-8 built (520 lines)
-|   |-- smoke_tests.py                # TASK-11 smoke experiment specs + runners (131 lines)
+|   |-- schemas.py                    # SR-2 built
+|   |-- registry.py                   # SR-1 built (28 tasks)
+|   |-- data_generator.py             # SR-3 built
+|   |-- splits.py                     # SR-4 built
+|   |-- evaluation.py                 # SR-6 built
+|   |-- runner.py                     # SR-7 built
+|   |-- reporting.py                  # SR-8 built
+|   |-- smoke_tests.py                # TASK-11 smoke experiment specs + runners
 |   |-- dsl/
 |   |   |-- __init__.py
-|   |   |-- classification_dsl.py     # SR-9 built (735 lines)
-|   |   `-- sequence_dsl.py           # SR-10 built (590 lines)
+|   |   |-- classification_dsl.py     # SR-9 built
+|   |   `-- sequence_dsl.py           # SR-10 built
 |   `-- models/
 |       |-- __init__.py
-|       `-- harness.py                # SR-5 built (656 lines, 9 families)
+|       `-- harness.py                # SR-5 built (9 families)
 |-- tests/                            # Validation suite (403 tests total)
 |   |-- __init__.py
 |   |-- test_schemas.py               # V-2: 54 tests
