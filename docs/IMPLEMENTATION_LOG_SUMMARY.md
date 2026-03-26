@@ -1,11 +1,11 @@
-﻿# IMPLEMENTATION LOG SUMMARY
+# IMPLEMENTATION LOG SUMMARY
 
 > **PURPOSE:** A running, human-readable summary of all implementation work completed so far.
 > This is the "what got built and what was learned" companion to `PROJECT_STATUS.md`.
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2025-03-25
+> **Last Updated:** 2025-03-25 (TASK-01 complete)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -22,10 +22,7 @@
 
 | Task | Scope | Completed | Log | Key outcome |
 |---|---|---|---|---|
-| — | — | — | — | No tasks completed yet |
-
-> Rows will be added here as tasks complete. Format:
-> `| TASK-01 | Input Schema (SR-2) | 2025-XX-XX | [log](implementation_log/TASK-01_input_schema.md) | {one-line outcome} |`
+| TASK-01 | Input Schema (SR-2) | 2025-03-25 | [log](implementation_log/TASK-01_input_schema.md) | All 4 schema classes + 2 enums in `src/schemas.py`. 52 V-2 tests pass. |
 
 ---
 
@@ -33,7 +30,9 @@
 
 Surprising findings, non-obvious edge cases, or things that would save time in future chats.
 
-_None yet. Append bullet points here as discovered during implementation._
+- **Use tuples, not lists, in frozen dataclasses.** Lists are not hashable, so frozen `@dataclass` fields must use tuples. This affects all callers constructing specs.
+- **`np.random.default_rng(seed)` is the right API.** Modern NumPy generator API gives full reproducibility. Each `sample()` call creates its own generator from the seed.
+- **Batch sampling uses sequential draws from one RNG.** `sample_batch(seed, n)` is NOT the same as `[sample(seed+i) for i in range(n)]`. The batch method is more efficient and produces better-distributed samples.
 
 ---
 
@@ -41,7 +40,7 @@ _None yet. Append bullet points here as discovered during implementation._
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. Implementation has not begun._
+_None. TASK-01 complete, TASK-02 ready to start._
 
 ---
 
@@ -52,7 +51,7 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | Validation | Component | Status | Notes |
 |---|---|---|---|
 | V-1 | Task Registry | NOT RUN | |
-| V-2 | Input Schema | NOT RUN | |
+| V-2 | Input Schema | **PASS** ✓ | 52 tests, all passing (4.13s) |
 | V-3 | Data Generator | NOT RUN | |
 | V-4 | Split Generator | NOT RUN | |
 | V-5 | Model Harness | NOT RUN | |

@@ -11,3 +11,6 @@ Check the Deviation Log in EXPERIMENT_CATALOG.md Part 5 before starting.
 Then implement the next incomplete task shown in PROJECT_STATUS.md.
 After completing the task, update PROJECT_STATUS.md, IMPLEMENTATION_LOG_SUMMARY.md,
 and write a detailed log in docs/implementation_log/TASK-XX_<name>.md.
+
+After carefully validating that the task is complete, make a PR to the main branch. 
+Before starting tasks, merge any existing PRs before you continue to ensure consistency.

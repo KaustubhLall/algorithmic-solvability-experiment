@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2025-03-25
+> **Last Updated:** 2025-03-25 (TASK-01 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -99,4 +99,46 @@ These decisions were made during planning and are captured here for completeness
 
 ## Implementation-Phase Decisions
 
-_Entries will be appended here as implementation proceeds._
+### ADR-006: Use frozen dataclasses with tuples for schema immutability
+
+- **Date:** 2025-03-25
+- **Task:** TASK-01
+- **Status:** ACCEPTED
+- **Context:** Schema objects will be passed around and stored in registries. Mutable schemas could lead to subtle bugs if modified after registration.
+- **Options considered:**
+  1. Regular dataclasses with mutable lists
+  2. Frozen dataclasses with tuples
+  3. Pydantic models with `frozen=True`
+- **Decision:** Frozen dataclasses with tuples for collection fields.
+- **Rationale:** Immutability prevents accidental mutation. Tuples are hashable (required by frozen dataclass). Standard library dataclasses keep dependencies minimal — Pydantic is available but not needed at this layer.
+- **Consequences:** All callers must pass tuples, not lists, when constructing specs. E.g. `values=("a", "b")` not `values=["a", "b"]`.
+
+---
+
+### ADR-007: Use np.random.Generator (modern API) for all sampling
+
+- **Date:** 2025-03-25
+- **Task:** TASK-01
+- **Status:** ACCEPTED
+- **Context:** Need reproducible sampling across the entire pipeline. Two NumPy random APIs exist: legacy `RandomState` and modern `Generator`.
+- **Options considered:**
+  1. Legacy `np.random.RandomState(seed)`
+  2. Modern `np.random.default_rng(seed)`
+- **Decision:** Use `np.random.default_rng(seed)` everywhere.
+- **Rationale:** Modern API has better statistical properties, is the recommended approach in NumPy docs, and supports `integers()` instead of deprecated `randint()`. Full reproducibility: same seed → same output.
+- **Consequences:** All downstream modules (Data Generator, Split Generator, etc.) must also use `default_rng`. Do NOT mix legacy and modern APIs.
+
+---
+
+### ADR-008: Project infrastructure — package layout and dependencies
+
+- **Date:** 2025-03-25
+- **Task:** TASK-01 (infrastructure setup)
+- **Status:** ACCEPTED
+- **Context:** Need a clean Python project layout that supports imports from `src/` subpackages, testing with pytest, and eventual experiment execution.
+- **Options considered:**
+  1. Flat layout (all .py files in root)
+  2. `src/` package with sub-packages for `dsl/` and `models/`
+- **Decision:** `src/` package with `__init__.py` files, `tests/` package, `conftest.py` at root for import resolution.
+- **Rationale:** Matches the planned file structure in PROJECT_STATUS.md. Sub-packages keep DSL and model code isolated.
+- **Consequences:** Imports use `from src.schemas import ...`. The `conftest.py` adds the project root to `sys.path`.
