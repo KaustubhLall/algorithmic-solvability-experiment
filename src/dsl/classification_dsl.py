@@ -478,6 +478,7 @@ class AggregateClassifier(Classifier):
     aggregator: Aggregator
     virtual_feature_name: str
     inner_classifier: Classifier
+    group_key: Optional[str] = None
 
     def evaluate_group(self, rows: List[Dict[str, Any]]) -> str:
         """Classify a group of rows."""
@@ -486,7 +487,9 @@ class AggregateClassifier(Classifier):
         return self.inner_classifier.evaluate(virtual_row)
 
     def evaluate(self, row: Dict[str, Any]) -> str:
-        return self.inner_classifier.evaluate(row)
+        raise RuntimeError(
+            "AggregateClassifier requires grouped rows; use evaluate_group()"
+        )
 
     def depth(self) -> int:
         return 1 + self.inner_classifier.depth()
@@ -506,7 +509,7 @@ def sample_predicate(
     schema: TabularInputSchema,
     rng: np.random.Generator,
     max_depth: int = 1,
-    current_depth: int = 0,
+    allowed_features: Optional[Sequence[str]] = None,
 ) -> Predicate:
     """Sample a random valid predicate for the given schema.
 
@@ -514,32 +517,41 @@ def sample_predicate(
         schema: The input schema (determines available features).
         rng: NumPy random generator.
         max_depth: Maximum predicate nesting depth.
-        current_depth: Current depth in the tree (internal).
+        allowed_features: Optional subset of schema feature names that may appear.
 
     Returns:
         A random Predicate instance.
     """
-    num_specs = list(schema.numerical_features)
-    cat_specs = list(schema.categorical_features)
+    if max_depth < 1:
+        raise ValueError(f"max_depth must be >= 1, got {max_depth}")
 
-    # At max depth or with probability, generate a leaf predicate
-    if current_depth >= max_depth or (current_depth > 0 and rng.random() < 0.5):
+    num_specs, cat_specs = _filter_feature_specs(schema, allowed_features)
+
+    if max_depth == 1 or rng.random() < 0.5:
         return _sample_leaf_predicate(num_specs, cat_specs, rng)
 
-    # Otherwise, generate a combinator
     combinator_type = rng.choice(["and", "or", "not", "xor", "k_of_n"])
+    child_depth = max_depth - 1
 
     if combinator_type == "not":
-        child = sample_predicate(schema, rng, max_depth, current_depth + 1)
+        child = sample_predicate(
+            schema, rng, max_depth=child_depth, allowed_features=allowed_features
+        )
         return Not(operand=child)
     elif combinator_type == "xor":
-        left = sample_predicate(schema, rng, max_depth, current_depth + 1)
-        right = sample_predicate(schema, rng, max_depth, current_depth + 1)
+        left = sample_predicate(
+            schema, rng, max_depth=child_depth, allowed_features=allowed_features
+        )
+        right = sample_predicate(
+            schema, rng, max_depth=child_depth, allowed_features=allowed_features
+        )
         return Xor(left=left, right=right)
     else:
         n_operands = int(rng.integers(2, 4))  # 2 or 3 operands
         operands = tuple(
-            sample_predicate(schema, rng, max_depth, current_depth + 1)
+            sample_predicate(
+                schema, rng, max_depth=child_depth, allowed_features=allowed_features
+            )
             for _ in range(n_operands)
         )
         if combinator_type == "and":
@@ -595,12 +607,32 @@ def _sample_leaf_predicate(
             return InSet(feature=spec.name, values=values)
 
 
+def _filter_feature_specs(
+    schema: TabularInputSchema,
+    allowed_features: Optional[Sequence[str]],
+) -> Tuple[List[NumericalFeatureSpec], List[CategoricalFeatureSpec]]:
+    """Restrict sampling to the requested feature subset when provided."""
+    allowed = set(allowed_features) if allowed_features is not None else None
+    num_specs = [
+        spec for spec in schema.numerical_features
+        if allowed is None or spec.name in allowed
+    ]
+    cat_specs = [
+        spec for spec in schema.categorical_features
+        if allowed is None or spec.name in allowed
+    ]
+    if not num_specs and not cat_specs:
+        raise ValueError("Schema has no eligible features to build predicates from")
+    return num_specs, cat_specs
+
+
 def sample_classifier(
     schema: TabularInputSchema,
     rng: np.random.Generator,
     n_classes: int = 2,
     max_depth: int = 2,
     class_labels: Optional[List[str]] = None,
+    allowed_features: Optional[Sequence[str]] = None,
 ) -> Classifier:
     """Sample a random valid classifier for the given schema.
 
@@ -608,8 +640,9 @@ def sample_classifier(
         schema: The input schema.
         rng: NumPy random generator.
         n_classes: Number of output classes.
-        max_depth: Maximum depth of the classification rule.
+        max_depth: Maximum depth of the sampled classifier.
         class_labels: Optional class label names. Defaults to "C0", "C1", etc.
+        allowed_features: Optional subset of schema feature names that may appear.
 
     Returns:
         A random Classifier instance.
@@ -622,18 +655,20 @@ def sample_classifier(
 
     if n_classes < 2:
         raise ValueError(f"n_classes must be >= 2, got {n_classes}")
+    if max_depth < 2:
+        raise ValueError(f"max_depth must be >= 2, got {max_depth}")
 
-    # Choose classifier type based on depth and n_classes
-    if max_depth <= 1 or n_classes == 2:
-        # Simple: if-then-else or short decision list
+    if max_depth == 2 or n_classes == 2:
         clf_type = rng.choice(["if_then_else", "decision_list"])
     else:
         clf_type = rng.choice(["if_then_else", "decision_list", "decision_tree"])
 
-    pred_depth = max(1, max_depth - 1)
+    pred_depth = max_depth - 1
 
     if clf_type == "if_then_else":
-        pred = sample_predicate(schema, rng, max_depth=pred_depth)
+        pred = sample_predicate(
+            schema, rng, max_depth=pred_depth, allowed_features=allowed_features
+        )
         idx = rng.choice(len(class_labels), size=2, replace=False)
         return IfThenElse(
             predicate=pred,
@@ -646,12 +681,20 @@ def sample_classifier(
         rng.shuffle(shuffled)
         rules = []
         for i in range(n_rules):
-            pred = sample_predicate(schema, rng, max_depth=pred_depth)
+            pred = sample_predicate(
+                schema, rng, max_depth=pred_depth, allowed_features=allowed_features
+            )
             rules.append((pred, shuffled[i]))
         default = shuffled[n_rules] if n_rules < len(shuffled) else shuffled[-1]
         return DecisionList(rules=tuple(rules), default_class=default)
     else:  # decision_tree
-        root = _sample_tree_node(schema, rng, class_labels, pred_depth, 0, max_depth)
+        root = _sample_tree_node(
+            schema=schema,
+            rng=rng,
+            class_labels=class_labels,
+            max_depth=max_depth,
+            allowed_features=allowed_features,
+        )
         return DecisionTreeClassifier(root=root)
 
 
@@ -659,19 +702,39 @@ def _sample_tree_node(
     schema: TabularInputSchema,
     rng: np.random.Generator,
     class_labels: List[str],
-    pred_depth: int,
-    current_tree_depth: int,
-    max_tree_depth: int,
+    max_depth: int,
+    allowed_features: Optional[Sequence[str]] = None,
 ) -> DecisionTreeNode:
     """Recursively sample a decision tree node."""
-    # Leaf condition
-    if current_tree_depth >= max_tree_depth or rng.random() < 0.3:
+    if max_depth <= 0:
         label = class_labels[int(rng.integers(0, len(class_labels)))]
         return DecisionTreeNode(label=label)
 
-    pred = sample_predicate(schema, rng, max_depth=min(pred_depth, 1))
-    left = _sample_tree_node(schema, rng, class_labels, pred_depth, current_tree_depth + 1, max_tree_depth)
-    right = _sample_tree_node(schema, rng, class_labels, pred_depth, current_tree_depth + 1, max_tree_depth)
+    if max_depth == 1:
+        label = class_labels[int(rng.integers(0, len(class_labels)))]
+        return DecisionTreeNode(label=label)
+
+    if max_depth == 2 or rng.random() < 0.3:
+        pred = sample_predicate(
+            schema, rng, max_depth=1, allowed_features=allowed_features
+        )
+        left = DecisionTreeNode(label=class_labels[int(rng.integers(0, len(class_labels)))])
+        right = DecisionTreeNode(label=class_labels[int(rng.integers(0, len(class_labels)))])
+        return DecisionTreeNode(predicate=pred, left=left, right=right)
+
+    predicate_budget = max_depth - 1
+    pred = sample_predicate(
+        schema, rng, max_depth=predicate_budget, allowed_features=allowed_features
+    )
+    child_budget = max_depth - 1 - pred.depth()
+    left = _sample_tree_node(
+        schema, rng, class_labels, max_depth=max(child_budget, 0),
+        allowed_features=allowed_features,
+    )
+    right = _sample_tree_node(
+        schema, rng, class_labels, max_depth=max(child_budget, 0),
+        allowed_features=allowed_features,
+    )
     return DecisionTreeNode(predicate=pred, left=left, right=right)
 
 
@@ -681,6 +744,7 @@ def sample_rule(
     n_classes: int = 2,
     max_depth: int = 2,
     class_labels: Optional[List[str]] = None,
+    allowed_features: Optional[Sequence[str]] = None,
 ) -> Classifier:
     """Top-level API: sample a random classification rule.
 
@@ -690,12 +754,15 @@ def sample_rule(
         n_classes: Number of output classes.
         max_depth: Maximum depth of the classification rule.
         class_labels: Optional class label names.
+        allowed_features: Optional subset of schema feature names that may appear.
 
     Returns:
         A Classifier instance.
     """
     rng = np.random.default_rng(seed)
-    return sample_classifier(schema, rng, n_classes, max_depth, class_labels)
+    return sample_classifier(
+        schema, rng, n_classes, max_depth, class_labels, allowed_features
+    )
 
 
 def evaluate_rule(
