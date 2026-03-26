@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from src.data_generator import Dataset, Sample
+from src.schemas import TabularInputSchema
 
 
 # ===================================================================
@@ -234,6 +235,7 @@ class SplitGenerator:
         train_fraction: float = 0.8,
         test_noise_level: float = 0.1,
         seed: int = 42,
+        schema: Optional[Any] = None,
     ) -> SplitResult:
         """IID split where test inputs have added noise.
 
@@ -258,7 +260,12 @@ class SplitGenerator:
         rng = np.random.default_rng(seed + 2**30)
         noisy_test = []
         for s in base_split.test:
-            noisy_input = self._add_noise(s.input_data, test_noise_level, rng)
+            noisy_input = self._add_noise(
+                s.input_data,
+                test_noise_level,
+                rng,
+                schema=schema,
+            )
             noisy_sample = Sample(
                 input_data=noisy_input,
                 output_data=s.output_data,
@@ -282,7 +289,11 @@ class SplitGenerator:
         )
 
     def _add_noise(
-        self, inp: Any, noise_level: float, rng: np.random.Generator
+        self,
+        inp: Any,
+        noise_level: float,
+        rng: np.random.Generator,
+        schema: Optional[Any] = None,
     ) -> Any:
         """Add noise to an input."""
         if isinstance(inp, list):
@@ -293,10 +304,29 @@ class SplitGenerator:
             return result
         elif isinstance(inp, dict):
             result = dict(inp)
+            categorical_values: Dict[str, Tuple[str, ...]] = {}
+            if isinstance(schema, TabularInputSchema):
+                categorical_values = {
+                    feature.name: feature.values
+                    for feature in schema.categorical_features
+                }
             for key, val in result.items():
-                if rng.random() < noise_level and isinstance(val, float):
+                should_perturb = rng.random() < noise_level
+                if should_perturb and isinstance(val, numbers.Real):
                     scale = max(abs(val) * 0.1, 1.0)
-                    result[key] = val + float(rng.normal(0, scale))
+                    result[key] = float(val) + float(rng.normal(0, scale))
+                elif (
+                    should_perturb
+                    and isinstance(val, str)
+                    and key in categorical_values
+                ):
+                    alternatives = [
+                        candidate
+                        for candidate in categorical_values[key]
+                        if candidate != val
+                    ]
+                    if alternatives:
+                        result[key] = alternatives[int(rng.integers(0, len(alternatives)))]
             return result
         return inp
 
@@ -318,5 +348,12 @@ def split_value(dataset: Dataset, feature_name: str, train_range: Tuple[float, f
 
 
 def split_noise(dataset: Dataset, train_fraction: float = 0.8,
-                test_noise_level: float = 0.1, seed: int = 42) -> SplitResult:
-    return SplitGenerator().split_with_noise(dataset, train_fraction, test_noise_level, seed)
+                test_noise_level: float = 0.1, seed: int = 42,
+                schema: Optional[Any] = None) -> SplitResult:
+    return SplitGenerator().split_with_noise(
+        dataset,
+        train_fraction,
+        test_noise_level,
+        seed,
+        schema=schema,
+    )

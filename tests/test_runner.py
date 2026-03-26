@@ -370,7 +370,7 @@ class TestSplitDispatch:
             model_configs=[],
             split_strategies=[SplitStrategy.IID],
         )
-        split = _apply_split(ds, SplitStrategy.IID, spec, seed=42)
+        split = _apply_split(ds, task, SplitStrategy.IID, spec, seed=42)
         assert split.train_size > 0
         assert split.test_size > 0
         assert split.strategy == SplitStrategy.IID
@@ -385,7 +385,7 @@ class TestSplitDispatch:
             split_strategies=[SplitStrategy.NOISE],
             noise_level=0.1,
         )
-        split = _apply_split(ds, SplitStrategy.NOISE, spec, seed=42)
+        split = _apply_split(ds, task, SplitStrategy.NOISE, spec, seed=42)
         assert split.train_size > 0
         assert split.test_size > 0
         assert split.strategy == SplitStrategy.NOISE
@@ -400,7 +400,7 @@ class TestSplitDispatch:
             split_strategies=[SplitStrategy.LENGTH_EXTRAPOLATION],
         )
         with pytest.raises(ValueError, match="length_threshold"):
-            _apply_split(ds, SplitStrategy.LENGTH_EXTRAPOLATION, spec, seed=42)
+            _apply_split(ds, task, SplitStrategy.LENGTH_EXTRAPOLATION, spec, seed=42)
 
     def test_value_split_requires_params(self, registry):
         task = registry.get("C1.1_numeric_threshold")
@@ -412,7 +412,7 @@ class TestSplitDispatch:
             split_strategies=[SplitStrategy.VALUE_EXTRAPOLATION],
         )
         with pytest.raises(ValueError, match="value_feature"):
-            _apply_split(ds, SplitStrategy.VALUE_EXTRAPOLATION, spec, seed=42)
+            _apply_split(ds, task, SplitStrategy.VALUE_EXTRAPOLATION, spec, seed=42)
 
     def test_length_split_with_threshold(self, registry):
         task = registry.get("S1.2_sort")
@@ -424,7 +424,7 @@ class TestSplitDispatch:
             split_strategies=[SplitStrategy.LENGTH_EXTRAPOLATION],
             length_threshold=5,
         )
-        split = _apply_split(ds, SplitStrategy.LENGTH_EXTRAPOLATION, spec, seed=42)
+        split = _apply_split(ds, task, SplitStrategy.LENGTH_EXTRAPOLATION, spec, seed=42)
         assert split.strategy == SplitStrategy.LENGTH_EXTRAPOLATION
 
 

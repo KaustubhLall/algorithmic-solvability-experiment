@@ -7,7 +7,7 @@
 > Read alongside `EXPERIMENT_DESIGN.md` which provides the rationale and theory.
 > All implementation work should be traceable back to entries in this file.
 >
-> **Last Updated:** 2026-03-25
+> **Last Updated:** 2026-03-26
 
 ---
 
@@ -1550,6 +1550,30 @@ Each entry follows this template:
 
 ---
 
+### DEV-012: TASK-13 runs the implemented C1-C3 classification suite and keeps the remaining catalog tasks deferred
+
+- **Date:** 2026-03-26
+- **Task:** TASK-13 (EXP-C1, EXP-C2, EXP-C3, EXP-C4, EXP-C5)
+- **Type:** DEFERRAL
+- **What changed:** TASK-13 generated `results/EXP-C1`, `results/EXP-C2`, and `results/EXP-C3` for the currently registered classification tasks only. The missing catalog-only tasks (`C1.4`, `C2.4`, `C3.2`, `C3.4`, `C3.6`) and all of `EXP-C4`/`EXP-C5` were not run.
+- **Why:** The registry still contains the original C0-C3 subset from TASK-04, and the higher-tier classification tasks remain deferred pending additional reference implementations and split support.
+- **Impact:** Classification baseline evidence is now available for the implemented tasks, but the benchmark still does not cover the full cataloged C-track surface.
+- **Resolution:** Completed TASK-13 for the implemented C1-C3 suite and left the remaining catalog tasks explicitly deferred rather than inventing placeholder artifacts.
+
+---
+
+### DEV-013: TASK-13 uses the validated classification model families and available OOD splits
+
+- **Date:** 2026-03-26
+- **Task:** TASK-13 (EXP-C1, EXP-C2, EXP-C3)
+- **Type:** EXPERIMENT_CHANGE
+- **What changed:** The executed classification suite uses `majority_class`, `logistic_regression`, `decision_tree`, `random_forest`, `gradient_boosted_trees`, and `mlp`, and it runs `iid`, `value_extrapolation`, and `noise` splits. The catalog's broader architecture/split matrix (for example class imbalance, unseen category combinations, distractor injection, adversarial boundary, and transformer families) was not executed.
+- **Why:** Those are the model families and split strategies currently validated and implemented in SR-5/SR-4. Running only the supported surface kept TASK-13 reproducible and aligned with the current harness.
+- **Impact:** `results/EXP-C1` through `results/EXP-C3` provide real classification baseline evidence today, but they do not yet answer the full split-robustness and architecture-comparison questions from the original catalog.
+- **Resolution:** Landed TASK-13 with the supported model/split surface, including schema-guided categorical noise for tabular robustness runs, and documented the remaining gaps for future tasks.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
@@ -1569,7 +1593,7 @@ Major architectural or design decisions made during implementation that are not 
 
 ### Entries
 
-_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-016._
+_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-021._
 
 ---
 
