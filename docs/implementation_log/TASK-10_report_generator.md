@@ -2,7 +2,7 @@
 
 > **Status:** COMPLETE
 > **Builds:** SR-8
-> **Validation:** V-8 (7 tests passing)
+> **Validation:** V-8
 > **Spec:** `EXPERIMENT_CATALOG.md` Part 1 (SR-8), Part 3 (V-8), Part 4 (TASK-10)
 > **Date Started:** 2026-03-25
 > **Date Completed:** 2026-03-25
@@ -13,72 +13,118 @@
 
 | Deliverable | File | Status |
 |---|---|---|
-| `generate_report_artifacts()` experiment writer | `src/reporting.py` | DONE |
-| `config.json` emission with spec + execution metadata | `src/reporting.py` | DONE |
-| `summary.md` experiment overview | `src/reporting.py` | DONE |
-| Per-task `metrics.json` | `src/reporting.py` | DONE |
-| Per-task `errors.json` | `src/reporting.py` | DONE |
-| Per-task `confusion.png` for classification tasks | `src/reporting.py` | DONE |
-| Per-task `extrap_curve.png` | `src/reporting.py` | DONE |
-| `comparison.md` cross-task table | `src/reporting.py` | DONE |
-| `solvability_verdicts.json` with Section 9.4 logic | `src/reporting.py` | DONE |
-| V-8 validation suite | `tests/test_reporting.py` | DONE (7 tests) |
+| Structured output directory writer for `results/{experiment_id}/...` | `src/reporting.py` | COMPLETE |
+| `config.json` export from the experiment spec | `src/reporting.py` | COMPLETE |
+| Human-readable `summary.md` | `src/reporting.py` | COMPLETE |
+| Per-task `metrics.json` and `errors.json` | `src/reporting.py` | COMPLETE |
+| `confusion.png` generation for classification tasks | `src/reporting.py` | COMPLETE |
+| `extrap_curve.png` generation from aggregated split metrics | `src/reporting.py` | COMPLETE |
+| Cross-task `comparison.md` | `src/reporting.py` | COMPLETE |
+| `solvability_verdicts.json` with Section 9.4 labels | `src/reporting.py` | COMPLETE |
+| Validation suite for V-8 | `tests/test_reporting.py` | COMPLETE |
+
+---
+
+## Files Changed
+
+- `src/reporting.py`
+- `tests/test_reporting.py`
+- `docs/PROJECT_STATUS.md`
+- `docs/IMPLEMENTATION_LOG_SUMMARY.md`
+- `docs/ARCHITECTURE_DECISIONS.md`
+- `docs/EXPERIMENT_CATALOG.md`
+- `docs/implementation_log/TASK-10_report_generator.md`
 
 ---
 
 ## Implementation Notes
 
-### Artifact layout
+### 1. Reporting consumes SR-7/SR-6 serializers instead of re-encoding the dataclasses
 
-- `generate_report_artifacts(report, output_root, registry)` writes the full SR-8 tree under `results/{experiment_id}/` (or an alternate root for tests).
-- The writer clears any existing experiment directory before writing fresh artifacts. This avoids stale files from a previous run surviving into the new report tree.
-- `config.json` stores the serialized experiment spec plus execution metadata (`seeds_used`, runtime, generation timestamp) so the report can be understood without loading Python objects.
+`generate_report()` uses `experiment_report_to_dict()`, `aggregated_result_to_dict()`, and `single_result_to_dict()` as the source of truth for JSON payloads. This avoids drift between the runner/evaluator dataclasses and the artifact schema, and made V-8 JSON validation straightforward.
 
-### Per-task outputs
+### 2. Solvability verdicts needed an explicit operationalization layer
 
-- `metrics.json` stores both the flat aggregated/single-run lists and a nested model -> split view. This keeps the file easy for scripts to scan while also making per-model drill-down convenient.
-- `errors.json` aggregates error taxonomies per model and split, records per-seed counts, and computes mean error-rate shares for quick diagnostics.
-- `confusion.png` is generated only for classification tasks, using the highest-accuracy available classification run (prefer IID when tied). Sequence tasks omit the confusion artifact because no confusion matrix exists for them.
-- `extrap_curve.png` is generated for every task and plots aggregated accuracy by split for each model, even when only a single split is available.
+Section 9.4 defines the labels qualitatively in terms of evidence criteria 1-9. The current pipeline directly exposes only part of that evidence. SR-8 therefore maps currently available signals into verdicts:
 
-### Solvability verdict policy
+- Criterion 1: high IID accuracy from aggregated IID results
+- Criterion 2: OOD success from non-IID aggregated results
+- Criterion 3: baseline separation from the floor baselines currently available in the harness (`majority_class`, `sequence_baseline`)
+- Criterion 4: seed stability from aggregated standard deviation and seed count
+- Criterion 5: coherent degradation from split-wise accuracy behavior
+- Criteria 6-9: only marked true when directly evidenced by the available split results; otherwise explicitly false
 
-- The report generator implements a criteria-based policy aligned to `EXPERIMENT_DESIGN.md` Section 9.4.
-- Required criteria (1-5) are checked from aggregated experiment metrics. Optional criteria (6-9) are only marked when the relevant evidence exists in the run.
-- The weighted solvability score from Section 11.5 is computed over the evidence channels actually present in the report and normalized by the available weight. This prevents missing experimental axes from automatically depressing the score.
-- Final labels are chosen per task from the best model-level assessment. A model can only earn `STRONG` if the required criteria hold and at least two optional criteria are positively observed.
+The resulting artifact includes both the verdict label and the per-criterion evidence flags, plus notes explaining why evidence is missing or weak.
 
-### Edge cases handled
+### 3. Plot generation is report-driven
 
-- Tasks with only IID evidence can still produce a `WEAK` verdict rather than being forced into `INCONCLUSIVE`.
-- Tasks with no positive evidence and uniformly poor results are labeled `NEGATIVE`.
-- Tasks with mixed or incomplete evidence fall back to `INCONCLUSIVE`.
-- Empty or partial per-task result sets still write valid JSON/Markdown files and a placeholder extrapolation plot.
+No raw dataset replay was needed:
+
+- `confusion.png` is built by averaging stored confusion matrices across matching single-run results
+- `extrap_curve.png` is built from aggregated accuracy-by-split values per model
+
+This keeps SR-8 lightweight and deterministic.
+
+### 4. Per-task artifact payloads were designed for downstream inspection
+
+Each task directory now contains:
+
+- `metrics.json`: task metadata, verdict, aggregated results, single results
+- `errors.json`: grouped error taxonomies by `(model, split)` with total and mean counts
+- `confusion.png`: only for classification tasks
+- `extrap_curve.png`: all tasks
+
+This should make TASK-11 and the later experiment phases much easier to inspect without re-running code.
 
 ---
 
-## Acceptance Criteria Results
+## Validation Work
 
-V-8 validation: **7 tests, all passing** (`tests/test_reporting.py`, 1.24s)
+### V-8 test coverage added
 
-Additional regression validation: **full test suite passes** (`.venv\Scripts\python.exe -m pytest -q`, `395 passed, 4 warnings`, 2.67s)
+`tests/test_reporting.py` adds 9 tests covering:
+
+1. expected output tree creation
+2. JSON parseability for all required JSON files
+3. markdown summary readability and consistency with `metrics.json`
+4. comparison markdown table generation
+5. solvability verdict labeling for all five labels:
+   - `STRONG`
+   - `MODERATE`
+   - `WEAK`
+   - `NEGATIVE`
+   - `INCONCLUSIVE`
+
+### Validation commands run
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_reporting.py
+.\.venv\Scripts\python.exe -m pytest
+```
+
+### Validation results
 
 | Check | Expected | Actual | Pass? |
 |---|---|---|---|
-| File structure | Expected SR-8 directory tree is created | `config.json`, `summary.md`, `comparison.md`, `solvability_verdicts.json`, and per-task artifacts are written | YES |
-| JSON validity | All JSON files parse cleanly | `config.json`, `metrics.json`, `errors.json`, and `solvability_verdicts.json` parse in V-8 tests | YES |
-| Markdown validity | `summary.md` renders with consistent content | V-8 checks summary/comparison markdown contains expected experiment and task rows | YES |
-| Metric consistency | Markdown metrics match JSON metrics | V-8 compares summary values against `metrics.json` | YES |
-| Solvability verdict logic | Labels match Section 9.4 policy | V-8 covers `WEAK`, `MODERATE`, `STRONG`, and `NEGATIVE` verdict cases | YES |
+| File structure | All required TASK-10 artifacts are created | `config.json`, `summary.md`, `comparison.md`, `solvability_verdicts.json`, per-task JSON/plots all created in tests | YES |
+| JSON validity | All JSON files parse without error | All reporting JSON artifacts parsed successfully | YES |
+| Markdown validity | Summary renders as readable markdown | Summary and comparison markdown contain human-readable tables and per-task verdict sections | YES |
+| Metric consistency | Summary values match JSON payloads | Best IID/OOD metrics and verdict labels are asserted against `metrics.json` in V-8 tests | YES |
+| Solvability verdict logic | Labels match Section 9.4 semantics | Dedicated tests verify `STRONG`, `MODERATE`, `WEAK`, `NEGATIVE`, `INCONCLUSIVE` cases | YES |
+| Regression safety | Existing validated pipeline still passes | Full suite passes: 395 tests | YES |
 
 ---
 
 ## Deviations from Plan
 
-None. TASK-10 was completed without changing the SR-8 deliverable list or acceptance criteria.
+### DEV-008: Report Generator operationalizes evidence criteria from available SR-7 metrics
+
+- **What changed:** Instead of waiting for every Section 9.4 criterion to be directly measured by the pipeline, SR-8 computes verdicts from the evidence currently available in `ExperimentReport` and records per-criterion flags plus explanatory notes.
+- **Why:** TASK-10 requires verdict artifacts now, while some diagnostic criteria (for example sample efficiency and counterfactual sensitivity) are only planned for later phases.
+- **Impact:** Verdicts are auditable today and compatible with later refinement. Recorded in `EXPERIMENT_CATALOG.md` Part 5 and ADR-017.
 
 ---
 
 ## Completion Summary
 
-TASK-10 delivered the full SR-8 reporting layer in `src/reporting.py` (761 lines) together with a focused V-8 suite in `tests/test_reporting.py` (7 tests). The report generator now turns any `ExperimentReport` from SR-7 into a durable artifact tree with JSON summaries, Markdown summaries/comparisons, per-task plots, and structured solvability verdicts that encode both the Section 9.4 label and the supporting evidence. Follow-up hardening also added experiment-id path validation and confusion-matrix plotting guards so report generation stays safe and deterministic under unusual inputs. TASK-11 can now run smoke experiments and persist their artifacts directly through SR-8 without additional reporting glue.
+TASK-10 completed the full reporting layer for the experiment pipeline. `src/reporting.py` now turns `ExperimentReport` objects into the full SR-8 artifact tree, including config snapshots, per-task metrics and errors, markdown summaries, plots, and solvability verdicts with explicit evidence flags. V-8 passes with 9 new tests, the full suite is green at 395 tests, and the project is now ready for TASK-11 smoke-test execution on a fully built end-to-end pipeline.

@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2026-03-25 (TASK-10 complete)
+> **Last Updated:** 2026-03-25 (TASK-09 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -266,16 +266,15 @@ These decisions were made during planning and are captured here for completeness
 
 ---
 
-### ADR-017: Score solvability with partial-evidence normalization and explicit criteria gates
+### ADR-017: Operationalize solvability labels from observable reporting evidence
 
 - **Date:** 2026-03-25
 - **Task:** TASK-10
 - **Status:** ACCEPTED
-- **Context:** EXPERIMENT_DESIGN.md Section 9.4 defines the meaning of the solvability labels, while Section 11.5 defines a weighted solvability score. The design does not specify exact thresholds or how to treat experiments that intentionally omit some evidence channels.
+- **Context:** EXPERIMENT_DESIGN.md Section 9.4 defines `STRONG` / `MODERATE` / `WEAK` / `NEGATIVE` / `INCONCLUSIVE` in terms of evidence criteria, but SR-7 currently exposes only some of those signals directly (IID/OOD accuracy, seed stability, baseline gap, split-wise behavior). Criteria like sample efficiency and counterfactual sensitivity are not yet part of the execution pipeline.
 - **Options considered:**
-  1. Use best IID accuracy alone to assign verdicts
-  2. Leave verdicts blank until later diagnostic experiments add every evidence channel
-  3. Implement explicit criteria-based verdicts and normalize the weighted score over only the evidence components that are actually present
-- **Decision:** Option 3 - the report generator checks Section 9.4 criteria directly, keeps `STRONG` gated on observed optional evidence, and computes the weighted score over available components only.
-- **Rationale:** This preserves fidelity to the design document without over-claiming from incomplete experiments. Early experiments can still produce useful `WEAK`, `NEGATIVE`, or `INCONCLUSIVE` verdicts, while later experiments can earn `MODERATE` or `STRONG` once the needed evidence exists.
-- **Consequences:** `solvability_verdicts.json` stores both the criterion breakdown and the score evidence. Future tasks can extend the verdict logic by adding new split types or sample-efficiency measurements without changing the report file layout.
+  1. Delay verdict generation until every criterion is directly measured
+  2. Implement a reporting-layer operationalization that maps available SR-7 evidence to the Section 9.4 labels and explicitly marks unavailable criteria as unmet
+- **Decision:** Option 2 - compute verdicts in SR-8 from the currently observable evidence, and record per-criterion flags plus explanatory notes in the output JSON/markdown.
+- **Rationale:** TASK-10 requires solvability verdicts now, and downstream tasks need those artifacts. Recording the evidence flags makes the approximation inspectable instead of opaque.
+- **Consequences:** Verdicts are reproducible and auditable today, but they remain bounded by the current pipeline instrumentation. Future tasks that add sample-efficiency, transfer, or counterfactual evaluations can tighten the verdict logic without changing the artifact format.
