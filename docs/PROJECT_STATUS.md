@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2025-03-25
-> **Current Phase:** Implementation — FOUNDATION phase (TASK-01 complete, TASK-02 next)
+> **Current Phase:** Implementation — TASK-08 next (FOUNDATION + DATA PIPELINE milestones complete)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-02: Classification Rule DSL |
+| **Next task to implement** | TASK-08: Evaluation Engine |
 | **Status** | NOT STARTED |
-| **Blocked by** | Nothing — TASK-01 is complete |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-9), Part 4 (TASK-02), Part 3 (V-9) |
+| **Blocked by** | Nothing — TASK-07 is complete |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-6), Part 4 (TASK-08), Part 3 (V-6) |
 
 ---
 
@@ -39,12 +39,12 @@
 | Task | Scope | Status | Notes |
 |---|---|---|---|
 | TASK-01 | Input Schema (SR-2) | **COMPLETE** ✓ | 52 V-2 tests pass. See [log](implementation_log/TASK-01_input_schema.md) |
-| TASK-02 | Classification Rule DSL (SR-9) | NOT STARTED | Depends on TASK-01 |
-| TASK-03 | Sequence DSL (SR-10) | NOT STARTED | Depends on TASK-01 |
-| TASK-04 | Task Registry (SR-1) | NOT STARTED | Depends on TASK-01–03 |
-| TASK-05 | Data Generator (SR-3) | NOT STARTED | Depends on TASK-04 |
-| TASK-06 | Split Generator (SR-4) | NOT STARTED | Depends on TASK-05 |
-| TASK-07 | Model Harness (SR-5) | NOT STARTED | Depends on TASK-01, 05 |
+| TASK-02 | Classification Rule DSL (SR-9) | **COMPLETE** ✓ | 55 V-9 tests pass. See [log](implementation_log/TASK-02_classification_dsl.md) |
+| TASK-03 | Sequence DSL (SR-10) | **COMPLETE** ✓ | 56 V-10 tests pass. See [log](implementation_log/TASK-03_sequence_dsl.md) |
+| TASK-04 | Task Registry (SR-1) | **COMPLETE** ✓ | 34 V-1 tests pass. 28 tasks registered. See [log](implementation_log/TASK-04_task_registry.md) |
+| TASK-05 | Data Generator (SR-3) | **COMPLETE** ✓ | 23 V-3 tests pass. See [log](implementation_log/TASK-05_data_generator.md) |
+| TASK-06 | Split Generator (SR-4) | **COMPLETE** ✓ | 29 V-4 tests pass. See [log](implementation_log/TASK-06_split_generator.md) |
+| TASK-07 | Model Harness (SR-5) | **COMPLETE** ✓ | 33 V-5 tests pass. 8 model families. See [log](implementation_log/TASK-07_model_harness.md) |
 | TASK-08 | Evaluation Engine (SR-6) | NOT STARTED | Depends on TASK-07 |
 | TASK-09 | Experiment Runner (SR-7) | NOT STARTED | Depends on TASK-04–08 |
 | TASK-10 | Report Generator (SR-8) | NOT STARTED | Depends on TASK-09 |
@@ -55,9 +55,9 @@
 | TASK-15 | Bonus: Algorithm Discovery | NOT STARTED | Depends on TASK-14 |
 
 **Milestone Gates:**
-- `[ ]` FOUNDATION complete (TASK-01–04 done + V-1, V-2, V-9, V-10 passing)
-- `[ ]` DATA PIPELINE complete (TASK-05–06 done + V-3, V-4 passing)
-- `[ ]` FULL PIPELINE complete (TASK-07–10 done + V-5 through V-8 passing)
+- `[x]` FOUNDATION complete (TASK-01–04 done + V-1, V-2, V-9, V-10 passing) ✓
+- `[x]` DATA PIPELINE complete (TASK-05–06 done + V-3, V-4 passing) ✓
+- `[ ]` FULL PIPELINE complete (TASK-07–10 done + V-5 through V-8 passing) — V-5 passing, V-6/7/8 not yet
 - `[ ]` SMOKE TEST GATE cleared (TASK-11 done + V-G1–G4 passing)
 
 ---
@@ -86,25 +86,29 @@ DataScience/
 │       └── TASK-11_smoke_tests.md
 ├── src/                              # Source code
 │   ├── __init__.py                   # Package init
-│   ├── schemas.py                    # SR-2: Input Schema ✓ BUILT
-│   ├── registry.py                   # SR-1: Task Registry (planned)
-│   ├── data_generator.py             # SR-3: Data Generator (planned)
-│   ├── splits.py                     # SR-4: Split Generator (planned)
+│   ├── schemas.py                    # SR-2: Input Schema ✓ BUILT (340 lines)
+│   ├── registry.py                   # SR-1: Task Registry ✓ BUILT (684 lines, 28 tasks)
+│   ├── data_generator.py             # SR-3: Data Generator ✓ BUILT (269 lines)
+│   ├── splits.py                     # SR-4: Split Generator ✓ BUILT (309 lines)
 │   ├── evaluation.py                 # SR-6: Evaluation Engine (planned)
 │   ├── runner.py                     # SR-7: Experiment Runner (planned)
 │   ├── reporting.py                  # SR-8: Report Generator (planned)
 │   ├── dsl/
 │   │   ├── __init__.py
-│   │   ├── classification_dsl.py     # SR-9: Classification Rule DSL (planned)
-│   │   └── sequence_dsl.py           # SR-10: Sequence DSL (planned)
+│   │   ├── classification_dsl.py     # SR-9: Classification Rule DSL ✓ BUILT (735 lines)
+│   │   └── sequence_dsl.py           # SR-10: Sequence DSL ✓ BUILT (590 lines)
 │   └── models/
 │       ├── __init__.py
-│       ├── harness.py                # SR-5: Model Harness (planned)
-│       ├── configs.py                # (planned)
-│       └── encoders.py               # (planned)
-├── tests/                            # Validation test suite
+│       └── harness.py                # SR-5: Model Harness ✓ BUILT (459 lines, 8 families)
+├── tests/                            # Validation test suite (282 tests total)
 │   ├── __init__.py
-│   └── test_schemas.py              # V-2: Input Schema tests ✓ 52 tests
+│   ├── test_schemas.py              # V-2: Input Schema tests ✓ 52 tests
+│   ├── test_classification_dsl.py   # V-9: Classification DSL tests ✓ 55 tests
+│   ├── test_sequence_dsl.py         # V-10: Sequence DSL tests ✓ 56 tests
+│   ├── test_registry.py             # V-1: Task Registry tests ✓ 34 tests
+│   ├── test_data_generator.py       # V-3: Data Generator tests ✓ 23 tests
+│   ├── test_splits.py               # V-4: Split Generator tests ✓ 29 tests
+│   └── test_model_harness.py        # V-5: Model Harness tests ✓ 33 tests
 ├── results/                          # Experiment outputs (auto-generated)
 ├── conftest.py                       # pytest root config
 ├── requirements.txt                  # Python dependencies
@@ -119,6 +123,10 @@ DataScience/
 
 - **DEV-001:** Added `Distribution` and `ElementType` enums (not in original SR-2 spec) for type safety.
 - **DEV-002:** Used tuples instead of lists for frozen dataclass compatibility.
+- **DEV-003:** Sequence DSL reducers return `[int]` instead of `int` for uniform composability.
+- **DEV-004:** S4/S5/C4/C5 task tiers deferred — only S0–S3 and C0–C3 registered initially.
+- **DEV-005:** DistractorSplit defined in enum but not yet implemented.
+- **DEV-006:** Single `harness.py` instead of planned `harness.py` + `configs.py` + `encoders.py`.
 
 See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 

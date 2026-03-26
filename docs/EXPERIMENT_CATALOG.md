@@ -1442,6 +1442,54 @@ Each entry follows this template:
 
 ---
 
+### DEV-003: Sequence DSL reducers return list[int] instead of int
+
+- **Date:** 2025-03-25
+- **Task:** TASK-03 (SR-10)
+- **Type:** INTERFACE_CHANGE
+- **What changed:** SR-10 spec implies reducers (Sum, Count, Max, Min, Parity) produce a scalar `int`. Implementation wraps output in `[int]` for uniform composability.
+- **Why:** All operations being `list[int] → list[int]` eliminates type-mismatch errors in `Compose` and simplifies the type system.
+- **Impact:** Downstream consumers must unwrap `[result]` when a scalar is needed. Documented in ADR-010.
+- **Resolution:** Accepted as a design improvement. The minor unwrapping cost is worth the type-safety gain.
+
+---
+
+### DEV-004: S4/S5/C4/C5 task tiers deferred
+
+- **Date:** 2025-03-25
+- **Task:** TASK-04 (SR-1)
+- **Type:** DEFERRAL
+- **What changed:** Only S0–S3 and C0–C3 task tiers are registered in the initial registry (28 tasks). S4 (structural/graph), S5 (DSL programs), C4 (stateful aggregation), and C5 (multi-step compositional) are deferred.
+- **Why:** Higher-tier tasks require more complex reference implementations. The initial 28 tasks cover all tiers needed for the pipeline (TASK-05 through TASK-11).
+- **Impact:** TASK-12/13 (experiment tasks) will need to add higher-tier tasks to the registry.
+- **Resolution:** Higher tiers will be added incrementally when experiment tasks are implemented.
+
+---
+
+### DEV-005: DistractorSplit defined but not implemented
+
+- **Date:** 2025-03-25
+- **Task:** TASK-06 (SR-4)
+- **Type:** DEFERRAL
+- **What changed:** The `DISTRACTOR` split strategy is defined in the `SplitStrategy` enum but has no implementation.
+- **Why:** Requires `TabularInputSchema.with_extra_irrelevant()` method. Needed only for specific experiments (EXP-D2).
+- **Impact:** No impact on pipeline development. Will implement when EXP-D2 is run.
+- **Resolution:** Enum value reserved for forward compatibility. Implementation deferred.
+
+---
+
+### DEV-006: Single harness.py instead of planned 3-file split
+
+- **Date:** 2025-03-25
+- **Task:** TASK-07 (SR-5)
+- **Type:** SCOPE_CHANGE
+- **What changed:** The planned file structure had `src/models/harness.py`, `src/models/configs.py`, and `src/models/encoders.py`. All code is in `harness.py` (459 lines).
+- **Why:** The total code volume doesn't justify 3 files. Splitting would create unnecessary import complexity.
+- **Impact:** All imports come from `src.models.harness`. No API impact. Will refactor if the file grows significantly.
+- **Resolution:** Accepted. Single file is cleaner at this scale.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
@@ -1461,7 +1509,7 @@ Major architectural or design decisions made during implementation that are not 
 
 ### Entries
 
-_No decisions yet. Entries will be appended here during implementation._
+_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-013._
 
 ---
 

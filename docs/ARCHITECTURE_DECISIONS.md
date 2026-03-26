@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2025-03-25 (TASK-01 complete)
+> **Last Updated:** 2025-03-25 (TASK-07 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -142,3 +142,79 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** `src/` package with `__init__.py` files, `tests/` package, `conftest.py` at root for import resolution.
 - **Rationale:** Matches the planned file structure in PROJECT_STATUS.md. Sub-packages keep DSL and model code isolated.
 - **Consequences:** Imports use `from src.schemas import ...`. The `conftest.py` adds the project root to `sys.path`.
+
+---
+
+### ADR-009: ABC base classes for DSL components
+
+- **Date:** 2025-03-25
+- **Task:** TASK-02, TASK-03
+- **Status:** ACCEPTED
+- **Context:** Both DSLs need extensible type hierarchies (predicates, classifiers, aggregators for classification; sequence operations for sequence DSL).
+- **Options considered:**
+  1. Plain functions with duck typing
+  2. Protocol classes (structural subtyping)
+  3. ABC base classes (nominal subtyping)
+- **Decision:** ABC base classes (`Predicate`, `Classifier`, `Aggregator`, `SeqOp`) with abstract methods `evaluate()`, `depth()`, `name()`, and track-specific extras.
+- **Rationale:** ABCs provide clear contracts, IDE support (autocomplete, type checking), and explicit documentation of the interface. The DSLs are closed enough that duck typing's flexibility isn't needed.
+- **Consequences:** New DSL primitives must inherit from the ABC and implement all abstract methods. This is a minor cost for strong guarantees.
+
+---
+
+### ADR-010: Uniform list[int] output type for all sequence DSL operations
+
+- **Date:** 2025-03-25
+- **Task:** TASK-03
+- **Status:** ACCEPTED
+- **Context:** Sequence DSL reducers (Sum, Count, etc.) naturally produce a scalar `int`, but `Compose` requires matching input/output types.
+- **Options considered:**
+  1. Separate `INT` and `LIST_INT` types with type-checked composition
+  2. All operations return `list[int]`, reducers wrap output in `[result]`
+- **Decision:** Option 2 — uniform `list[int] → list[int]` for all operations.
+- **Rationale:** Eliminates type-mismatch errors in `Compose`. The cost (unwrapping `[result]`) is trivial compared to the complexity of a heterogeneous type system.
+- **Consequences:** Downstream consumers of reducer output must unwrap single-element lists. Logged as DEV-003.
+
+---
+
+### ADR-011: Callable-based TaskSpec interface (no class hierarchy)
+
+- **Date:** 2025-03-25
+- **Task:** TASK-04
+- **Status:** ACCEPTED
+- **Context:** TaskSpec needs `reference_algorithm`, `input_sampler`, and `verifier` fields. These could be methods on a Task class, or callables stored in a dataclass.
+- **Options considered:**
+  1. Task ABC with `generate()`, `verify()`, `sample()` methods
+  2. TaskSpec dataclass with callable fields
+- **Decision:** Option 2 — plain callables in a dataclass.
+- **Rationale:** Task definitions are simple functions (e.g., `lambda x: sorted(x)`). Wrapping each in a class adds boilerplate with no benefit. The dataclass keeps all task metadata in one place.
+- **Consequences:** No inheritance hierarchy for tasks. Each task is defined by its builder function, not a class. This scales well to 28+ tasks.
+
+---
+
+### ADR-012: Label re-verification at data generation time
+
+- **Date:** 2025-03-25
+- **Task:** TASK-05
+- **Status:** ACCEPTED
+- **Context:** Reference algorithms must produce correct labels. Bugs could silently produce wrong labels that corrupt all downstream results.
+- **Options considered:**
+  1. Trust the reference algorithm (no re-verification)
+  2. Re-verify every label at generation time (default on)
+- **Decision:** Option 2 — `DataGenerator(verify_labels=True)` is the default.
+- **Rationale:** The cost is negligible (one extra function call per sample), and the benefit is catching any reference algorithm bug immediately rather than after running 20 experiments. Per ADR-003 (validation-first development).
+- **Consequences:** Generation is slightly slower but guarantees label correctness. Can be disabled for performance-critical batch generation.
+
+---
+
+### ADR-013: sklearn as the sole model backend (no XGBoost/LightGBM initially)
+
+- **Date:** 2025-03-25
+- **Task:** TASK-07
+- **Status:** ACCEPTED
+- **Context:** The spec mentions XGBoost and LightGBM as potential model families. These require additional dependencies.
+- **Options considered:**
+  1. Include XGBoost/LightGBM from the start
+  2. Use sklearn's GradientBoostingClassifier as the GBT family, add XGBoost/LightGBM later if needed
+- **Decision:** Option 2 — sklearn only for now.
+- **Rationale:** sklearn's GBT is sufficient for the experiment's purposes. Keeping dependencies minimal reduces setup friction. The `SklearnModelWrapper` pattern makes it trivial to add XGBoost/LightGBM later.
+- **Consequences:** GBT performance may be slightly worse than XGBoost on large datasets, but experiment datasets are small (hundreds of samples). Can upgrade later without API changes.
