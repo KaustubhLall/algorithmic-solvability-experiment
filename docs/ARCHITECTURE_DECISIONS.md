@@ -342,3 +342,66 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 3 - thread the task schema into `split_with_noise()` and sample alternate categorical values from each feature's declared domain.
 - **Rationale:** This preserves valid inputs, keeps labels tied to the clean examples as intended by ADR-004, and turns the `NOISE` split into a meaningful robustness regime for mixed-type tasks.
 - **Consequences:** `run_experiment()` now passes `task.input_schema` into tabular noise splits. Categorical classification tasks get genuine perturbation-based OOD evaluation without introducing invalid category tokens.
+
+---
+
+### ADR-022: Diagnostic experiments reuse baseline artifacts rather than re-running the full pipeline
+
+- **Date:** 2026-03-26
+- **Task:** TASK-14
+- **Status:** ACCEPTED
+- **Context:** EXP-D1 needs to select task/model pairings for learning-curve analysis. Re-running the full Phase 2/3 suite would be expensive and redundant since TASK-12/13 already generated artifacts.
+- **Options considered:**
+  1. Re-run all TASK-12/13 experiments inside the diagnostic runner
+  2. Load baseline verdicts and model configs from existing `results/EXP-*/` artifacts
+  3. Hard-code task/model pairings without referencing baseline results
+- **Decision:** Option 2 - `collect_baseline_task_records()` loads `solvability_verdicts.json` and `config.json` from existing experiment output directories and selects the best model per task.
+- **Rationale:** Avoids redundant computation, keeps diagnostic results tied to the actual baseline evidence, and allows the diagnostic suite to run independently of the full pipeline.
+- **Consequences:** Diagnostic experiments depend on baseline artifacts existing on disk. If baseline artifacts are missing, the runner raises a clear error. The `BaselineTaskRecord` dataclass provides a typed contract for this lookup.
+
+---
+
+### ADR-023: Task-level distractor injection via schema augmentation instead of split-level injection
+
+- **Date:** 2026-03-26
+- **Task:** TASK-14
+- **Status:** ACCEPTED
+- **Context:** EXP-D2 needs to test model robustness to irrelevant features. The original plan mentioned a `DistractorSplit` strategy (DEV-005), but implementing at the split level would require modifying test inputs after generation while keeping labels valid.
+- **Options considered:**
+  1. Implement `DistractorSplit` in SR-4 that adds columns to test inputs only
+  2. Augment the `TaskSpec` schema with distractor features and wrap the reference algorithm to filter them
+  3. Manually inject random columns into feature vectors at training time
+- **Decision:** Option 2 - `_clone_task_with_distractors()` creates a new `TaskSpec` with an augmented `TabularInputSchema` containing extra irrelevant features, and wraps the reference algorithm to ignore them.
+- **Rationale:** This preserves end-to-end correctness (data generation, splitting, training, and evaluation all work normally), supports any split strategy, and avoids modifying the shared SR-4 infrastructure.
+- **Consequences:** Distractor features appear in both train and test sets, which is the standard ML framing. The approach uses `TabularInputSchema.with_extra_irrelevant()` which was already available from TASK-01.
+
+---
+
+### ADR-024: Expose InputEncoder.feature_names and SklearnModelWrapper.estimator for diagnostic access
+
+- **Date:** 2026-03-26
+- **Task:** TASK-14
+- **Status:** ACCEPTED
+- **Context:** EXP-D4 (feature-importance alignment) needs to run `sklearn.inspection.permutation_importance` on a fitted model with access to the column names used during encoding.
+- **Options considered:**
+  1. Re-implement permutation importance from scratch without accessing internals
+  2. Add a diagnostic-specific wrapper that duplicates the fit/encode logic
+  3. Expose read-only properties on the existing `InputEncoder` and `SklearnModelWrapper`
+- **Decision:** Option 3 - add `InputEncoder.feature_names` (returns list of column names) and `SklearnModelWrapper.estimator` (returns the wrapped sklearn estimator).
+- **Rationale:** Minimal surface area increase, no behavior change, and directly enables sklearn's built-in inspection tools.
+- **Consequences:** Two new read-only properties on existing classes. No impact on training or prediction behavior. Diagnostic code can now call `permutation_importance(model.estimator, X, y)` directly.
+
+---
+
+### ADR-025: Structured calibrated-label function for solvability verdict refinement
+
+- **Date:** 2026-03-26
+- **Task:** TASK-14
+- **Status:** ACCEPTED
+- **Context:** EXP-D5 merges baseline evidence (from TASK-12/13) with diagnostic evidence (from D1-D4) to produce calibrated solvability verdicts. The verdict logic needed to be testable independently.
+- **Options considered:**
+  1. Inline the label logic within the calibration loop
+  2. Extract a pure function `_calibrated_label(evidence, best_iid_accuracy) -> str`
+- **Decision:** Option 2 - extract a standalone function that maps evidence flags to verdict labels using the criteria from EXPERIMENT_DESIGN.md Section 9.4.
+- **Rationale:** Enables unit testing of each verdict path (STRONG, MODERATE, WEAK, NEGATIVE, INCONCLUSIVE) without setting up full experiment infrastructure.
+- **Consequences:** Five unit tests cover the label function directly. The function can be refined as more criteria become measurable without changing the experiment runner.

@@ -1574,6 +1574,35 @@ Each entry follows this template:
 
 ---
 
+### DEV-014: TASK-14 diagnostic experiment design choices
+
+- **Date:** 2026-03-26
+- **Task:** TASK-14 (EXP-D1, EXP-D2, EXP-D3, EXP-D4, EXP-D5)
+- **Type:** EXPERIMENT_CHANGE
+- **What changed:** Several implementation choices differ from the abstract catalog descriptions:
+  - EXP-D1 selects task/model pairings from existing baseline artifacts (`collect_baseline_task_records()`) rather than requiring a live Phase 2/3 rerun.
+  - EXP-D2 uses task-level distractor injection via `_clone_task_with_distractors()` (schema augmentation + reference-algorithm wrapping) instead of the deferred `DistractorSplit` strategy.
+  - EXP-D3 noise robustness runs classification tasks only (Gaussian perturbation for numerics, schema-guided categorical flips).
+  - EXP-D4 feature-importance alignment uses `sklearn.inspection.permutation_importance` with exposed `InputEncoder.feature_names` and `SklearnModelWrapper.estimator` properties.
+  - EXP-D5 calibration combines baseline evidence with D1-D4 diagnostic signals using a testable `_calibrated_label()` function.
+- **Why:** These choices keep the diagnostic suite executable with today's infrastructure while producing meaningful results. Task-level distractor injection is cleaner than split-level injection, and artifact reuse avoids redundant computation.
+- **Impact:** Diagnostic results depend on baseline artifacts existing on disk. The `DistractorSplit` enum value remains reserved but unused. Two new read-only properties were added to `harness.py`.
+- **Resolution:** All five diagnostic experiments implemented and tested (21 tests). ADR-022 through ADR-025 document the architectural decisions.
+
+---
+
+### DEV-015: NumPy 2.0+ compatibility fix for `np.trapz`
+
+- **Date:** 2026-03-26
+- **Task:** TASK-14 (EXP-D1)
+- **Type:** BUG_FIX
+- **What changed:** `np.trapz` was removed in NumPy 2.0. The `_curve_auc()` function in `diagnostic_experiments.py` now uses `getattr(np, 'trapezoid', None) or np.trapz` for backwards-compatible trapezoidal integration.
+- **Why:** The development environment uses NumPy 2.4.3 which no longer has `np.trapz`.
+- **Impact:** No functional change to AUC computation. The fallback ensures compatibility with both NumPy 1.x and 2.x.
+- **Resolution:** Single-line fix in `_curve_auc()`. All tests pass.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
@@ -1593,7 +1622,7 @@ Major architectural or design decisions made during implementation that are not 
 
 ### Entries
 
-_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-021._
+_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-025._
 
 ---
 
