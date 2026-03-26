@@ -5,7 +5,7 @@
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2026-03-26 (TASK-13 complete, classification suite artifacts generated, full suite green)
+> **Last Updated:** 2026-03-26 (TASK-14 complete, diagnostic experiments D1-D5 implemented, 21 new tests, full suite green)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -35,6 +35,7 @@
 | TASK-11 | Smoke Tests (EXP-0.x) | 2026-03-25 | [log](implementation_log/TASK-11_smoke_tests.md) | Added `src/smoke_tests.py`, a CLI entrypoint in `main.py`, a raw-sequence LSTM path in `src/models/harness.py`, 7 V-Global smoke tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. |
 | TASK-12 | Sequence Experiments | 2026-03-26 | [log](implementation_log/TASK-12_sequence_experiments.md) | Added `src/sequence_experiments.py`, `main.py sequence`, `tests/test_sequence_experiments.py`, unseen-token-safe LSTM inference, and generated `results/EXP-S1` through `results/EXP-S3` for the implemented S1-S3 sequence tiers. |
 | TASK-13 | Classification Experiments | 2026-03-26 | [log](implementation_log/TASK-13_classification_experiments.md) | Added `src/classification_experiments.py`, `main.py classification`, `tests/test_classification_experiments.py`, schema-guided categorical noise for tabular robustness splits, and generated `results/EXP-C1` through `results/EXP-C3` for the implemented C1-C3 classification tiers. |
+| TASK-14 | Diagnostic Experiments | 2026-03-26 | [log](implementation_log/TASK-14_diagnostic_experiments.md) | Added `src/diagnostic_experiments.py` (1271 lines), `main.py diagnostic`, `tests/test_diagnostic_experiments.py` (21 tests). Five diagnostic experiment runners: EXP-D1 sample-efficiency learning curves, EXP-D2 distractor robustness, EXP-D3 noise robustness, EXP-D4 feature-importance alignment via permutation importance, EXP-D5 solvability verdict calibration combining baseline + diagnostic evidence. Added `InputEncoder.feature_names` and `SklearnModelWrapper.estimator` properties to harness. Fixed `np.trapz` → `np.trapezoid` for NumPy 2.0+ compat. |
 
 ---
 
@@ -68,6 +69,11 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 - **Classification noise needs schema-aware categorical perturbations.** Without task-schema-guided flips, categorical-only tasks such as `C1.3_categorical_match` get an IID duplicate instead of a real robustness split. TASK-13 therefore passes the input schema into the noise split so categorical values can be swapped within their valid domain.
 - **Mid-range value windows preserve label support for threshold-like tasks.** Using a training band such as `[20, 80]` keeps both sides of common thresholds represented while still leaving meaningful low/high tails for value extrapolation tests.
 - **The implemented classification suite is much stronger than the sequence suite at current scale.** Across `results/EXP-C1` through `results/EXP-C3`, 11 of 13 tasks reached `MODERATE`; only `C2.1_and_rule` stayed `WEAK` due to weak baseline separation and `C1.6_modular_class` remained `INCONCLUSIVE`.
+- **Diagnostic experiments can reuse baseline artifacts without re-running the full pipeline.** EXP-D1 selects task/model pairings from existing `solvability_verdicts.json` and `config.json` artifacts, avoiding a costly re-execution of the full Phase 2/3 suite.
+- **Task-level distractor injection via `_clone_task_with_distractors` is cleaner than split-level injection.** Augmenting the `TaskSpec` schema and wrapping the reference algorithm preserves end-to-end correctness while letting normal split strategies work unchanged.
+- **`sklearn.inspection.permutation_importance` works directly on `SklearnModelWrapper.estimator`.** Exposing the raw estimator avoids re-fitting or wrapping, and the `InputEncoder.feature_names` property provides the column-name mapping needed for alignment analysis.
+- **NumPy 2.0+ removed `np.trapz`; use `np.trapezoid` with a fallback.** `getattr(np, 'trapezoid', None) or np.trapz` provides backwards-compatible AUC computation.
+- **Solvability calibration benefits from a structured `_calibrated_label` function.** Separating the label logic from the evidence-merging loop makes the verdict rules testable in isolation and easier to iterate on.
 
 ---
 
@@ -75,7 +81,7 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. TASK-14 (Diagnostic Experiments) is ready to start._
+_None. TASK-15 (Bonus — Algorithm Discovery) is ready to start._
 
 ---
 
@@ -100,4 +106,6 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-G3 | Trivial task ceiling | **PASS** | `EXP-0.2` decision tree/logistic regression reach 100% accuracy; verdict is MODERATE under current operationalization |
 | V-G4 | Data-model isolation | **PASS** | Runner smoke validation confirms fresh per-task dataset generation |
 
-Full suite status: **418 tests passing**.
+| V-14 | Diagnostic Experiments | **PASS** | 21 tests, all passing |
+
+Full suite status: **439 tests passing** (2 pre-existing LSTM/torch-related failures unrelated to TASK-14).

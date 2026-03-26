@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2026-03-26
-> **Current Phase:** Implementation - TASK-13 complete (classification baseline suite landed, TASK-14 next)
+> **Current Phase:** Implementation - TASK-14 complete (diagnostic experiments landed, TASK-15 next)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-14: Diagnostic Experiments |
+| **Next task to implement** | TASK-15: Bonus — Algorithm Discovery |
 | **Status** | READY TO START |
-| **Blocked by** | Nothing - TASK-12 and TASK-13 shipped, validation is green |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-D1 to EXP-D5), Part 4 (TASK-14) |
+| **Blocked by** | Nothing - TASK-14 shipped, 21 diagnostic tests pass |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-B1, EXP-B2), Part 4 (TASK-15) |
 
 ---
 
@@ -51,7 +51,7 @@
 | TASK-11 | Smoke Tests (EXP-0.x) | **COMPLETE** | **GATE CLEARED.** `src/smoke_tests.py`, `main.py`, 7 V-Global tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. LSTM reaches 90.5% exact match on bounded sort; C1.1 smoke is MODERATE with perfect tree/logistic accuracy; control tasks are NEGATIVE. See [log](implementation_log/TASK-11_smoke_tests.md) |
 | TASK-12 | Sequence Experiments | **COMPLETE** | Added `src/sequence_experiments.py`, CLI support in `main.py`, `tests/test_sequence_experiments.py`, refreshed smoke-compatible LSTM handling for unseen tokens, and generated `results/EXP-S1` through `results/EXP-S3`. Current sequence verdicts are mostly NEGATIVE, with WEAK evidence on `S1.4_count_symbol` and `S2.2_balanced_parens`. See [log](implementation_log/TASK-12_sequence_experiments.md) |
 | TASK-13 | Classification Experiments | **COMPLETE** | Added `src/classification_experiments.py`, CLI support in `main.py`, `tests/test_classification_experiments.py`, schema-guided categorical noise for tabular `NOISE` splits, and generated `results/EXP-C1` through `results/EXP-C3`. Current classification verdicts are mostly MODERATE across the implemented C1-C3 tasks, with `C2.1_and_rule` at WEAK and `C1.6_modular_class` at INCONCLUSIVE. See [log](implementation_log/TASK-13_classification_experiments.md) |
-| TASK-14 | Diagnostic Experiments | NOT STARTED | Depends on TASK-12-13 |
+| TASK-14 | Diagnostic Experiments | **COMPLETE** | Added `src/diagnostic_experiments.py`, CLI support in `main.py`, `tests/test_diagnostic_experiments.py` (21 tests), `InputEncoder.feature_names` and `SklearnModelWrapper.estimator` properties. EXP-D1 through EXP-D5 runners implemented: sample-efficiency learning curves, distractor robustness, noise robustness, feature-importance alignment (permutation importance), and solvability verdict calibration combining baseline + diagnostic evidence. See [log](implementation_log/TASK-14_diagnostic_experiments.md) |
 | TASK-15 | Bonus: Algorithm Discovery | NOT STARTED | Depends on TASK-14 |
 
 **Milestone Gates:**
@@ -61,6 +61,7 @@
 - `[x]` SMOKE TEST GATE cleared (TASK-11 done + V-G1-G4 passing)
 - `[x]` SEQUENCE BASELINE SUITE complete (TASK-12 done for implemented S1-S3 tiers + `results/EXP-S1` through `results/EXP-S3`)
 - `[x]` CLASSIFICATION BASELINE SUITE complete (TASK-13 done for implemented C1-C3 tiers + `results/EXP-C1` through `results/EXP-C3`)
+- `[x]` DIAGNOSTIC SUITE complete (TASK-14 done for EXP-D1 through EXP-D5 + 21 tests passing)
 
 ---
 
@@ -87,7 +88,8 @@ DataScience/
 |       |-- TASK-10_report_generator.md
 |       |-- TASK-11_smoke_tests.md
 |       |-- TASK-12_sequence_experiments.md
-|       `-- TASK-13_classification_experiments.md
+|       |-- TASK-13_classification_experiments.md
+|       `-- TASK-14_diagnostic_experiments.md
 |-- src/
 |   |-- __init__.py
 |   |-- schemas.py                    # SR-2 built
@@ -100,6 +102,7 @@ DataScience/
 |   |-- smoke_tests.py                # TASK-11 smoke experiment specs + runners
 |   |-- sequence_experiments.py       # TASK-12 sequence experiment specs + runners
 |   |-- classification_experiments.py # TASK-13 classification experiment specs + runners
+|   |-- diagnostic_experiments.py     # TASK-14 diagnostic experiment specs + runners
 |   |-- dsl/
 |   |   |-- __init__.py
 |   |   |-- classification_dsl.py     # SR-9 built
@@ -121,7 +124,8 @@ DataScience/
 |   |-- test_reporting.py             # V-8: 9 tests
 |   |-- test_smoke_tests.py           # V-G1..V-G4: 7 tests
 |   |-- test_sequence_experiments.py  # TASK-12 sequence experiment coverage
-|   `-- test_classification_experiments.py # TASK-13 classification experiment coverage
+|   |-- test_classification_experiments.py # TASK-13 classification experiment coverage
+|   `-- test_diagnostic_experiments.py    # TASK-14 diagnostic experiment coverage (21 tests)
 |-- results/
 |-- conftest.py
 |-- requirements.txt
@@ -145,6 +149,8 @@ DataScience/
 - **DEV-011:** TASK-12 sequence runs use the currently validated model families (`majority_class`, `sequence_baseline`, `mlp`, `lstm`) and replace EXP-S3's cataloged composition split with the available value-range extrapolation split until transformer/composition support lands.
 - **DEV-012:** TASK-13 executes the currently implemented classification tiers (`EXP-C1` through `EXP-C3`) and keeps the remaining catalog-only classification tasks plus `EXP-C4`/`EXP-C5` deferred until their registry coverage exists.
 - **DEV-013:** TASK-13 classification runs use the currently validated model families (`majority_class`, `logistic_regression`, `decision_tree`, `random_forest`, `gradient_boosted_trees`, `mlp`) and the available OOD splits (`value_extrapolation`, `noise`) instead of the catalog's broader split/architecture matrix.
+- **DEV-014:** TASK-14 selects D1 task/model pairings from existing baseline artifacts rather than requiring a live Phase 2/3 rerun. D2 uses `_clone_task_with_distractors` to inject schema-aware distractor features at the task level. D3 noise robustness runs classification tasks only (numeric Gaussian noise). D4 feature-importance alignment uses `sklearn.inspection.permutation_importance`. D5 calibration combines baseline evidence with D1-D4 diagnostic signals and uses a refined `_calibrated_label` function.
+- **DEV-015:** `np.trapz` replaced with `np.trapezoid` (NumPy 2.0+ compat) in `_curve_auc`.
 
 See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 

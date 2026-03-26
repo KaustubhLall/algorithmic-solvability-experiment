@@ -134,6 +134,11 @@ class InputEncoder:
         """Fit and transform in one step."""
         return self.fit(inputs).transform(inputs)
 
+    @property
+    def feature_names(self) -> List[str]:
+        """Feature names in transformed column order."""
+        return list(self._feature_names)
+
     def _fit_tabular(self, inputs: List[Dict[str, Any]]) -> None:
         self._feature_names = sorted(inputs[0].keys())
         self._categorical_maps = {}
@@ -250,6 +255,11 @@ class SklearnModelWrapper(BaseModel):
 
     def name(self) -> str:
         return self._model_name
+
+    @property
+    def estimator(self) -> Any:
+        """Expose the wrapped estimator for diagnostics."""
+        return self._estimator
 
 
 class SequenceBaselineModel(BaseModel):
