@@ -1418,7 +1418,27 @@ Each entry follows this template:
 
 ## Log Entries
 
-_No deviations yet. Entries will be appended here during implementation._
+### DEV-001: Added Distribution and ElementType enums to SR-2
+
+- **Date:** 2025-03-25
+- **Task:** TASK-01 (SR-2)
+- **Type:** SCOPE_CHANGE
+- **What changed:** Added `Distribution` enum (`UNIFORM`, `NORMAL`, `EXPONENTIAL`, `WEIGHTED`) and `ElementType` enum (`INT`, `BINARY`, `CHAR`) as proper Python Enum classes. The original SR-2 spec used raw strings for these fields.
+- **Why:** Type safety — prevents typos, enables IDE autocomplete, and makes invalid states unrepresentable.
+- **Impact:** All downstream modules constructing schemas must import and use these enums instead of raw strings.
+- **Resolution:** Enums are defined in `src/schemas.py` alongside the schema classes.
+
+---
+
+### DEV-002: Tuples instead of lists for frozen dataclass compatibility
+
+- **Date:** 2025-03-25
+- **Task:** TASK-01 (SR-2)
+- **Type:** INTERFACE_CHANGE
+- **What changed:** SR-2 spec shows `list[str]` for `CategoricalFeatureSpec.values` and `list[float]` for `weights`. Implementation uses `Tuple[str, ...]` and `Tuple[float, ...]`. Similarly, `TabularInputSchema` feature collections use tuples.
+- **Why:** Frozen dataclasses require all fields to be hashable. Lists are not hashable; tuples are.
+- **Impact:** All callers must pass tuples when constructing specs. E.g. `values=("a", "b")` not `values=["a", "b"]`.
+- **Resolution:** Documented in ADR-006 and TASK-01 log. Minor ergonomic cost, significant safety gain.
 
 ---
 

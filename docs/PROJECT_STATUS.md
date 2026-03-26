@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2025-03-25
-> **Current Phase:** Pre-implementation (documentation complete, no code written yet)
+> **Current Phase:** Implementation — FOUNDATION phase (TASK-01 complete, TASK-02 next)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-01: Input Schema System |
+| **Next task to implement** | TASK-02: Classification Rule DSL |
 | **Status** | NOT STARTED |
-| **Blocked by** | Nothing — this is the first task |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-2), Part 4 (TASK-01), Part 3 (V-2) |
+| **Blocked by** | Nothing — TASK-01 is complete |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-9), Part 4 (TASK-02), Part 3 (V-9) |
 
 ---
 
@@ -38,7 +38,7 @@
 
 | Task | Scope | Status | Notes |
 |---|---|---|---|
-| TASK-01 | Input Schema (SR-2) | NOT STARTED | |
+| TASK-01 | Input Schema (SR-2) | **COMPLETE** ✓ | 52 V-2 tests pass. See [log](implementation_log/TASK-01_input_schema.md) |
 | TASK-02 | Classification Rule DSL (SR-9) | NOT STARTED | Depends on TASK-01 |
 | TASK-03 | Sequence DSL (SR-10) | NOT STARTED | Depends on TASK-01 |
 | TASK-04 | Task Registry (SR-1) | NOT STARTED | Depends on TASK-01–03 |
@@ -84,23 +84,30 @@ DataScience/
 │       ├── TASK-09_experiment_runner.md
 │       ├── TASK-10_report_generator.md
 │       └── TASK-11_smoke_tests.md
-├── src/                              # Source code (to be created during implementation)
-│   ├── schemas.py                    # SR-2: Input Schema
-│   ├── registry.py                   # SR-1: Task Registry
-│   ├── data_generator.py             # SR-3: Data Generator
-│   ├── splits.py                     # SR-4: Split Generator
-│   ├── evaluation.py                 # SR-6: Evaluation Engine
-│   ├── runner.py                     # SR-7: Experiment Runner
-│   ├── reporting.py                  # SR-8: Report Generator
+├── src/                              # Source code
+│   ├── __init__.py                   # Package init
+│   ├── schemas.py                    # SR-2: Input Schema ✓ BUILT
+│   ├── registry.py                   # SR-1: Task Registry (planned)
+│   ├── data_generator.py             # SR-3: Data Generator (planned)
+│   ├── splits.py                     # SR-4: Split Generator (planned)
+│   ├── evaluation.py                 # SR-6: Evaluation Engine (planned)
+│   ├── runner.py                     # SR-7: Experiment Runner (planned)
+│   ├── reporting.py                  # SR-8: Report Generator (planned)
 │   ├── dsl/
-│   │   ├── classification_dsl.py     # SR-9: Classification Rule DSL
-│   │   └── sequence_dsl.py           # SR-10: Sequence DSL
+│   │   ├── __init__.py
+│   │   ├── classification_dsl.py     # SR-9: Classification Rule DSL (planned)
+│   │   └── sequence_dsl.py           # SR-10: Sequence DSL (planned)
 │   └── models/
-│       ├── harness.py                # SR-5: Model Harness
-│       ├── configs.py
-│       └── encoders.py
+│       ├── __init__.py
+│       ├── harness.py                # SR-5: Model Harness (planned)
+│       ├── configs.py                # (planned)
+│       └── encoders.py               # (planned)
+├── tests/                            # Validation test suite
+│   ├── __init__.py
+│   └── test_schemas.py              # V-2: Input Schema tests ✓ 52 tests
 ├── results/                          # Experiment outputs (auto-generated)
-├── tests/                            # Validation test suite (mirrors V-1 through V-10)
+├── conftest.py                       # pytest root config
+├── requirements.txt                  # Python dependencies
 └── main.py
 ```
 
@@ -110,7 +117,10 @@ DataScience/
 
 ## Known Deviations from Plan
 
-_None yet. See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries._
+- **DEV-001:** Added `Distribution` and `ElementType` enums (not in original SR-2 spec) for type safety.
+- **DEV-002:** Used tuples instead of lists for frozen dataclass compatibility.
+
+See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 
 ---
 
