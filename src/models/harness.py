@@ -12,7 +12,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -30,7 +30,7 @@ class ModelFamily(str, Enum):
     KNN = "knn"
     GRADIENT_BOOSTED_TREES = "gradient_boosted_trees"
     MLP = "mlp"
-    # Sequence models (placeholder for future)
+    LSTM = "lstm"
     SEQUENCE_BASELINE = "sequence_baseline"
 
 
@@ -274,6 +274,283 @@ class SequenceBaselineModel(BaseModel):
         return "sequence_baseline"
 
 
+class _SequenceLSTMNet:
+    """Small pooled encoder used for sequence smoke tests."""
+
+    def __init__(
+        self,
+        vocab_size: int,
+        output_vocab_size: int,
+        max_output_len: int,
+        pad_idx: int,
+        embedding_dim: int,
+        hidden_size: int,
+    ) -> None:
+        import torch
+        from torch import nn
+
+        feature_dim = (hidden_size * 2) + (vocab_size - 1)
+
+        class SequenceEncoder(nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.embedding = nn.Embedding(
+                    vocab_size,
+                    embedding_dim,
+                    padding_idx=pad_idx,
+                )
+                self.lstm = nn.LSTM(
+                    embedding_dim,
+                    hidden_size,
+                    batch_first=True,
+                    bidirectional=True,
+                )
+                self.head = nn.Sequential(
+                    nn.Linear(feature_dim, hidden_size * 2),
+                    nn.ReLU(),
+                    nn.Linear(
+                        hidden_size * 2,
+                        max_output_len * output_vocab_size,
+                    ),
+                )
+
+            def forward(self, tokens: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+                embedded = self.embedding(tokens)
+                packed = nn.utils.rnn.pack_padded_sequence(
+                    embedded,
+                    lengths.cpu(),
+                    batch_first=True,
+                    enforce_sorted=False,
+                )
+                encoded, _ = self.lstm(packed)
+                encoded, _ = nn.utils.rnn.pad_packed_sequence(
+                    encoded,
+                    batch_first=True,
+                    total_length=tokens.shape[1],
+                )
+                time_steps = encoded.shape[1]
+                mask = (
+                    torch.arange(time_steps, device=encoded.device).unsqueeze(0)
+                    < lengths.unsqueeze(1)
+                )
+                pooled = (encoded * mask.unsqueeze(-1)).sum(dim=1) / lengths.unsqueeze(1)
+                counts = torch.zeros(
+                    tokens.shape[0],
+                    vocab_size - 1,
+                    device=tokens.device,
+                    dtype=encoded.dtype,
+                )
+                valid_tokens = tokens.clamp(min=1) - 1
+                counts.scatter_add_(
+                    1,
+                    valid_tokens,
+                    mask.to(encoded.dtype),
+                )
+                counts = counts / lengths.unsqueeze(1)
+                logits = self.head(torch.cat([pooled, counts], dim=1))
+                return logits.view(-1, max_output_len, output_vocab_size)
+
+        self.module = SequenceEncoder()
+
+
+class LSTMSequenceModel(BaseModel):
+    """PyTorch LSTM encoder for sequence-to-sequence smoke tests.
+
+    The model consumes raw integer sequences, pools bidirectional LSTM states,
+    and predicts each output position independently. That is sufficient for the
+    bounded smoke-test regime while keeping the public harness API unchanged.
+    """
+
+    def __init__(
+        self,
+        model_name: str = "lstm",
+        embedding_dim: int = 32,
+        hidden_size: int = 64,
+        epochs: int = 60,
+        batch_size: int = 64,
+        learning_rate: float = 0.01,
+        random_state: int = 42,
+    ) -> None:
+        self._model_name = model_name
+        self._embedding_dim = embedding_dim
+        self._hidden_size = hidden_size
+        self._epochs = epochs
+        self._batch_size = batch_size
+        self._learning_rate = learning_rate
+        self._random_state = random_state
+
+        self._pad_idx = 0
+        self._token_offset = 1
+        self._max_output_len = 0
+        self._same_length_outputs = False
+        self._trained = False
+        self._network: Any = None
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> None:
+        import torch
+        from torch import nn
+        from torch.utils.data import DataLoader, TensorDataset
+
+        train_inputs = self._normalize_sequences(X, "train_inputs")
+        train_outputs = self._normalize_sequences(y, "train_outputs")
+        if not train_inputs:
+            raise ValueError("LSTM sequence model requires non-empty training data")
+
+        all_tokens = [token for seq in train_inputs + train_outputs for token in seq]
+        if not all_tokens:
+            raise ValueError("LSTM sequence model requires at least one token")
+
+        min_token = min(all_tokens)
+        max_token = max(all_tokens)
+        self._token_offset = 1 - min_token if min_token <= 0 else 1
+        vocab_size = max_token + self._token_offset + 1
+        self._max_output_len = max(len(seq) for seq in train_outputs)
+        self._same_length_outputs = all(
+            len(inp) == len(out)
+            for inp, out in zip(train_inputs, train_outputs)
+        )
+
+        torch.manual_seed(self._random_state)
+
+        train_input_tensor, train_input_lengths = self._encode_sequences(
+            train_inputs,
+            max(len(seq) for seq in train_inputs),
+        )
+        train_output_tensor, _ = self._encode_sequences(
+            train_outputs,
+            self._max_output_len,
+        )
+
+        sequence_net = _SequenceLSTMNet(
+            vocab_size=vocab_size,
+            output_vocab_size=vocab_size,
+            max_output_len=self._max_output_len,
+            pad_idx=self._pad_idx,
+            embedding_dim=self._embedding_dim,
+            hidden_size=self._hidden_size,
+        )
+        self._network = sequence_net.module
+        self._network.train()
+
+        optimizer = torch.optim.Adam(
+            self._network.parameters(),
+            lr=self._learning_rate,
+        )
+        dataset = TensorDataset(
+            train_input_tensor,
+            train_input_lengths,
+            train_output_tensor,
+        )
+        loader = DataLoader(
+            dataset,
+            batch_size=min(self._batch_size, len(dataset)),
+            shuffle=True,
+        )
+
+        for _ in range(self._epochs):
+            for batch_inputs, batch_lengths, batch_targets in loader:
+                optimizer.zero_grad()
+                logits = self._network(batch_inputs, batch_lengths)
+                loss = nn.functional.cross_entropy(
+                    logits.reshape(-1, vocab_size),
+                    batch_targets.reshape(-1),
+                    ignore_index=self._pad_idx,
+                )
+                loss.backward()
+                optimizer.step()
+
+        self._trained = True
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        import torch
+
+        if not self._trained or self._network is None:
+            raise RuntimeError("LSTMSequenceModel must be fit before predict")
+
+        inputs = self._normalize_sequences(X, "test_inputs")
+        if not inputs:
+            return np.array([], dtype=object)
+
+        input_tensor, input_lengths = self._encode_sequences(
+            inputs,
+            max(len(seq) for seq in inputs),
+        )
+
+        self._network.eval()
+        with torch.no_grad():
+            logits = self._network(input_tensor, input_lengths)
+            encoded_predictions = logits.argmax(dim=-1).cpu().tolist()
+
+        decoded_predictions: List[List[int]] = []
+        for encoded, source in zip(encoded_predictions, inputs):
+            if self._same_length_outputs:
+                target_len = len(source)
+            else:
+                target_len = self._first_pad_index(encoded)
+
+            decoded_predictions.append([
+                int(token - self._token_offset)
+                for token in encoded[:target_len]
+                if token != self._pad_idx
+            ])
+
+        return np.array(decoded_predictions, dtype=object)
+
+    def name(self) -> str:
+        return self._model_name
+
+    def _normalize_sequences(
+        self,
+        values: Union[np.ndarray, Sequence[Any]],
+        field_name: str,
+    ) -> List[List[int]]:
+        raw_values = values.tolist() if isinstance(values, np.ndarray) else list(values)
+        sequences: List[List[int]] = []
+        for seq in raw_values:
+            if not isinstance(seq, list):
+                raise ValueError(
+                    f"LSTM sequence model requires list[int] {field_name}, "
+                    f"got {type(seq)}"
+                )
+            try:
+                sequences.append([int(token) for token in seq])
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"LSTM sequence model requires integer tokens in {field_name}"
+                ) from exc
+        return sequences
+
+    def _encode_sequences(
+        self,
+        sequences: List[List[int]],
+        max_len: int,
+    ) -> Tuple[Any, Any]:
+        import torch
+
+        encoded = np.full((len(sequences), max_len), self._pad_idx, dtype=np.int64)
+        lengths = np.zeros(len(sequences), dtype=np.int64)
+
+        for idx, seq in enumerate(sequences):
+            lengths[idx] = len(seq)
+            for pos, token in enumerate(seq[:max_len]):
+                encoded[idx, pos] = self._encode_token(token)
+
+        return (
+            torch.tensor(encoded, dtype=torch.long),
+            torch.tensor(lengths, dtype=torch.long),
+        )
+
+    def _encode_token(self, token: int) -> int:
+        encoded = token + self._token_offset
+        return encoded if encoded > self._pad_idx else self._pad_idx
+
+    def _first_pad_index(self, encoded_sequence: List[int]) -> int:
+        for idx, token in enumerate(encoded_sequence):
+            if token == self._pad_idx:
+                return idx
+        return len(encoded_sequence)
+
+
 # ===================================================================
 # Model factory
 # ===================================================================
@@ -353,6 +630,17 @@ def build_model(config: ModelConfig) -> BaseModel:
             config.name or "mlp",
         )
 
+    elif config.family == ModelFamily.LSTM:
+        return LSTMSequenceModel(
+            model_name=config.name or "lstm",
+            embedding_dim=hp.get("embedding_dim", 32),
+            hidden_size=hp.get("hidden_size", 64),
+            epochs=hp.get("epochs", 60),
+            batch_size=hp.get("batch_size", 64),
+            learning_rate=hp.get("learning_rate", 0.01),
+            random_state=hp.get("random_state", 42),
+        )
+
     elif config.family == ModelFamily.SEQUENCE_BASELINE:
         return SequenceBaselineModel()
 
@@ -426,6 +714,28 @@ class ModelHarness:
         # Stringify outputs for uniform handling
         train_labels_str = [str(o) for o in train_outputs]
         test_labels_str = [str(o) for o in test_outputs]
+
+        if self._config.family == ModelFamily.LSTM:
+            self._model.fit(train_inputs, train_outputs)
+
+            if len(test_inputs) == 0:
+                return PredictionResult(
+                    model_name=self._model.name(),
+                    predictions=[],
+                    true_labels=test_labels_str,
+                    train_size=len(train_inputs),
+                    test_size=0,
+                )
+
+            raw_predictions = self._model.predict(test_inputs)
+            predictions = [str(prediction) for prediction in raw_predictions]
+            return PredictionResult(
+                model_name=self._model.name(),
+                predictions=predictions,
+                true_labels=test_labels_str,
+                train_size=len(train_inputs),
+                test_size=len(test_inputs),
+            )
 
         # Encode inputs
         X_train = self._input_encoder.fit_transform(train_inputs)

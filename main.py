@@ -1,16 +1,37 @@
-# This is a sample Python script.
+"""Command-line entrypoint for running project tasks."""
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from __future__ import annotations
 
+import argparse
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from src.smoke_tests import run_all_smoke_experiments
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Run experiment workflows for the algorithmic solvability project.",
+    )
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=["smoke"],
+        default="smoke",
+        help="Workflow to run. Defaults to the TASK-11 smoke suite.",
+    )
+    parser.add_argument(
+        "--output-root",
+        default="results",
+        help="Directory where experiment artifacts should be written.",
+    )
+    args = parser.parse_args()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    if args.command == "smoke":
+        artifacts = run_all_smoke_experiments(output_root=args.output_root)
+        for experiment_id, artifact in artifacts.items():
+            print(f"{experiment_id}: {artifact.output_dir}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

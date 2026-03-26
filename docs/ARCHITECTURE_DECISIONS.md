@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2026-03-25 (TASK-09 complete)
+> **Last Updated:** 2026-03-25 (TASK-11 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -278,3 +278,35 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 - compute verdicts in SR-8 from the currently observable evidence, and record per-criterion flags plus explanatory notes in the output JSON/markdown.
 - **Rationale:** TASK-10 requires solvability verdicts now, and downstream tasks need those artifacts. Recording the evidence flags makes the approximation inspectable instead of opaque.
 - **Consequences:** Verdicts are reproducible and auditable today, but they remain bounded by the current pipeline instrumentation. Future tasks that add sample-efficiency, transfer, or counterfactual evaluations can tighten the verdict logic without changing the artifact format.
+
+---
+
+### ADR-018: Add a targeted raw-sequence LSTM path instead of rewriting the whole harness
+
+- **Date:** 2026-03-25
+- **Task:** TASK-11
+- **Status:** ACCEPTED
+- **Context:** EXP-0.1 requires a real sequence model that can learn bounded sorting. The existing SR-5 harness only supported feature-encoded sklearn-style models, which were insufficient for the smoke gate.
+- **Options considered:**
+  1. Rewrite SR-5 so every model family consumes raw sequence/tabular examples directly
+  2. Add a targeted raw-sequence execution path for sequence neural families while leaving the sklearn path unchanged
+  3. Skip the LSTM and log a smoke-test deviation
+- **Decision:** Option 2 - keep the existing fixed-feature path for classical models and add a raw-sequence `LSTMSequenceModel` branch in `ModelHarness`.
+- **Rationale:** This was the smallest change that satisfied the smoke-task requirement without destabilizing SR-5/SR-7/SR-8 interfaces that were already validated.
+- **Consequences:** `ModelHarness` is now hybrid. Classical families still flow through `InputEncoder`/`LabelEncoder`, while the LSTM family trains on raw `list[int]` sequences and returns decoded sequence predictions through the same `PredictionResult` interface.
+
+---
+
+### ADR-019: Shape smoke-specific task bounds in a local registry rather than mutating the benchmark registry
+
+- **Date:** 2026-03-25
+- **Task:** TASK-11
+- **Status:** ACCEPTED
+- **Context:** The catalog specifies EXP-0.1 as sort on sequences of length 4-8, but the shared `S1.2_sort` benchmark task is defined more broadly in the registry.
+- **Options considered:**
+  1. Narrow the shared registry task globally
+  2. Add general-purpose task override fields to `ExperimentSpec`
+  3. Clone the task into a smoke-local registry with the bounded schema
+- **Decision:** Option 3 - `src/smoke_tests.py` builds a smoke-local registry that reuses the same `task_id` and algorithm while swapping in a bounded 4-8 sequence schema.
+- **Rationale:** The smoke suite needs the cataloged regime, but the wider benchmark task definition should remain intact for later experiment tasks.
+- **Consequences:** TASK-11 stays faithful to the smoke spec without changing SR-1 globally. If later tasks need many experiment-specific task variants, SR-7 can grow a more general override mechanism.

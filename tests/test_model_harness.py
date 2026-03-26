@@ -74,6 +74,7 @@ class TestModelInstantiation:
         ModelFamily.KNN,
         ModelFamily.GRADIENT_BOOSTED_TREES,
         ModelFamily.MLP,
+        ModelFamily.LSTM,
         ModelFamily.SEQUENCE_BASELINE,
     ])
     def test_build_model(self, family):

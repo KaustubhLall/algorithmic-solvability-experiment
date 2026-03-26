@@ -5,7 +5,7 @@
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2026-03-25 (TASK-10 complete, V-8 passing, full suite green)
+> **Last Updated:** 2026-03-25 (TASK-11 complete, smoke gate green, full suite green)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -22,16 +22,17 @@
 
 | Task | Scope | Completed | Log | Key outcome |
 |---|---|---|---|---|
-| TASK-01 | Input Schema (SR-2) | 2025-03-25 | [log](implementation_log/TASK-01_input_schema.md) | All 4 schema classes + 2 enums in `src/schemas.py`. 52 V-2 tests pass. |
-| TASK-02 | Classification Rule DSL (SR-9) | 2025-03-25 | [log](implementation_log/TASK-02_classification_dsl.md) | Predicates, combinators, classifiers, aggregators, rule sampler in `src/dsl/classification_dsl.py`. 55 V-9 tests pass. |
-| TASK-03 | Sequence DSL (SR-10) | 2025-03-25 | [log](implementation_log/TASK-03_sequence_dsl.md) | 18+ primitives, composition, program sampler, equivalence checking in `src/dsl/sequence_dsl.py`. 56 V-10 tests pass. |
-| TASK-04 | Task Registry (SR-1) | 2025-03-25 | [log](implementation_log/TASK-04_task_registry.md) | **FOUNDATION MILESTONE.** 28 tasks across S0-S3, C0-C3 in `src/registry.py`. 34 V-1 tests pass. |
+| TASK-01 | Input Schema (SR-2) | 2025-03-25 | [log](implementation_log/TASK-01_input_schema.md) | All 4 schema classes + 2 enums in `src/schemas.py`. 54 V-2 tests pass. |
+| TASK-02 | Classification Rule DSL (SR-9) | 2025-03-25 | [log](implementation_log/TASK-02_classification_dsl.md) | Predicates, combinators, classifiers, aggregators, rule sampler in `src/dsl/classification_dsl.py`. 58 V-9 tests pass. |
+| TASK-03 | Sequence DSL (SR-10) | 2025-03-25 | [log](implementation_log/TASK-03_sequence_dsl.md) | 18+ primitives, composition, program sampler, equivalence checking in `src/dsl/sequence_dsl.py`. 57 V-10 tests pass. |
+| TASK-04 | Task Registry (SR-1) | 2025-03-25 | [log](implementation_log/TASK-04_task_registry.md) | **FOUNDATION MILESTONE.** 28 tasks across S0-S3, C0-C3 in `src/registry.py`. 35 V-1 tests pass. |
 | TASK-05 | Data Generator (SR-3) | 2025-03-25 | [log](implementation_log/TASK-05_data_generator.md) | Label re-verification, noise injection, multi-task generation in `src/data_generator.py`. 23 V-3 tests pass. |
-| TASK-06 | Split Generator (SR-4) | 2025-03-25 | [log](implementation_log/TASK-06_split_generator.md) | **DATA PIPELINE MILESTONE.** 4 split strategies (IID, length, value, noise) in `src/splits.py`. 29 V-4 tests pass. |
-| TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 8 model families, unified encode->train->predict->decode pipeline in `src/models/harness.py`. 33 V-5 tests pass. |
-| TASK-08 | Evaluation Engine (SR-6) | 2025-03-25 | [log](implementation_log/TASK-08_evaluation_engine.md) | Classification + sequence metric dispatch, confusion matrix, per-class P/R/F1, error taxonomy, metadata-conditioned breakdowns in `src/evaluation.py`. 52 V-6 tests pass. |
+| TASK-06 | Split Generator (SR-4) | 2025-03-25 | [log](implementation_log/TASK-06_split_generator.md) | **DATA PIPELINE MILESTONE.** 4 split strategies (IID, length, value, noise) in `src/splits.py`. 33 V-4 tests pass. |
+| TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 9 model families, unified encode->train->predict->decode pipeline in `src/models/harness.py`, now including a raw-sequence LSTM path. 38 V-5 tests pass. |
+| TASK-08 | Evaluation Engine (SR-6) | 2025-03-25 | [log](implementation_log/TASK-08_evaluation_engine.md) | Classification + sequence metric dispatch, confusion matrix, per-class P/R/F1, error taxonomy, metadata-conditioned breakdowns in `src/evaluation.py`. 53 V-6 tests pass. |
 | TASK-09 | Experiment Runner (SR-7) | 2026-03-25 | [log](implementation_log/TASK-09_experiment_runner.md) | Multi-seed experiment orchestration, aggregation, progress logging, and JSON-ready serialization in `src/runner.py`. 36 V-7 tests pass. |
 | TASK-10 | Report Generator (SR-8) | 2026-03-25 | [log](implementation_log/TASK-10_report_generator.md) | Structured experiment artifact writing, per-task metrics/errors JSON, markdown summaries, plots, and solvability verdict computation in `src/reporting.py`. 9 V-8 tests pass. |
+| TASK-11 | Smoke Tests (EXP-0.x) | 2026-03-25 | [log](implementation_log/TASK-11_smoke_tests.md) | Added `src/smoke_tests.py`, a CLI entrypoint in `main.py`, a raw-sequence LSTM path in `src/models/harness.py`, 7 V-Global smoke tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. |
 
 ---
 
@@ -57,6 +58,8 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 - **Use runner/evaluation serializers as the reporting source of truth.** `experiment_report_to_dict()`, `aggregated_result_to_dict()`, and `single_result_to_dict()` keep SR-8 from drifting away from SR-7/6 field names.
 - **Section 9.4 needs an explicit operationalization layer.** The design labels are qualitative; SR-8 now records per-criterion evidence flags and notes, using currently available SR-7 signals while leaving unavailable criteria clearly unmet instead of guessing.
 - **Per-task plots can be generated from reports alone.** Averaging stored confusion matrices and plotting aggregated accuracy by split was enough for V-8; no raw dataset replay was necessary.
+- **Smoke-task data shaping is best handled outside the global registry.** EXP-0.1 needs sort sequences bounded to length 4-8, but the benchmark task definition stays broader. Cloning that task into a smoke-local registry preserved the benchmark while matching the cataloged smoke regime.
+- **Current solvability calibration needs richer smoke evidence for classification.** Under ADR-017, IID-only single-seed trivial tasks can at best look WEAK. TASK-11 therefore expanded EXP-0.2 with a baseline, a noise split, and 5 seeds so V-G3 can validate the currently measurable minimum evidence and land at MODERATE.
 
 ---
 
@@ -64,7 +67,7 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. TASK-11 (Pipeline Smoke Tests) is ready to start._
+_None. TASK-12 (Sequence Experiments) is ready to start._
 
 ---
 
@@ -74,17 +77,19 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 
 | Validation | Component | Status | Notes |
 |---|---|---|---|
-| V-1 | Task Registry | **PASS** | 34 tests, all passing (0.22s) |
-| V-2 | Input Schema | **PASS** | 52 tests, all passing (4.13s) |
+| V-1 | Task Registry | **PASS** | 35 tests, all passing |
+| V-2 | Input Schema | **PASS** | 54 tests, all passing |
 | V-3 | Data Generator | **PASS** | 23 tests, all passing (0.23s) |
-| V-4 | Split Generator | **PASS** | 29 tests, all passing (0.12s) |
-| V-5 | Model Harness | **PASS** | 33 tests, all passing (1.00s) |
-| V-6 | Evaluation Engine | **PASS** | 52 tests, all passing (0.84s) |
+| V-4 | Split Generator | **PASS** | 33 tests, all passing |
+| V-5 | Model Harness | **PASS** | 38 tests, all passing |
+| V-6 | Evaluation Engine | **PASS** | 53 tests, all passing |
 | V-7 | Experiment Runner | **PASS** | 36 tests, all passing (0.95s) |
-| V-8 | Report Generator | **PASS** | 9 tests, all passing (1.14s); full suite now passes with 395 tests |
-| V-9 | Classification Rule DSL | **PASS** | 55 tests, all passing (0.28s) |
-| V-10 | Sequence DSL | **PASS** | 56 tests, all passing (0.16s) |
-| V-G1 | Round-trip check | NOT RUN | |
-| V-G2 | Control task calibration | NOT RUN | |
-| V-G3 | Trivial task ceiling | NOT RUN | |
-| V-G4 | Data-model isolation | NOT RUN | |
+| V-8 | Report Generator | **PASS** | 9 tests, all passing |
+| V-9 | Classification Rule DSL | **PASS** | 58 tests, all passing |
+| V-10 | Sequence DSL | **PASS** | 57 tests, all passing |
+| V-G1 | Round-trip check | **PASS** | Covered in `tests/test_smoke_tests.py`; manual accuracy matches evaluation/report accuracy |
+| V-G2 | Control task calibration | **PASS** | `EXP-0.3` verdicts are NEGATIVE for both control tasks |
+| V-G3 | Trivial task ceiling | **PASS** | `EXP-0.2` decision tree/logistic regression reach 100% accuracy; verdict is MODERATE under current operationalization |
+| V-G4 | Data-model isolation | **PASS** | Runner smoke validation confirms fresh per-task dataset generation |
+
+Full suite status: **403 tests passing**.
