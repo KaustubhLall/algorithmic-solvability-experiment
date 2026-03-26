@@ -7,10 +7,9 @@ EXP-B2: DSL Program Search for Sequence Tasks
 from __future__ import annotations
 
 import json
-import textwrap
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import matplotlib
 
@@ -21,49 +20,16 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier, export_text
 
 from src.data_generator import Sample, generate_dataset
-from src.dsl.sequence_dsl import (
-    Compose,
-    Concat,
-    Count,
-    Drop,
-    FilterEven,
-    FilterGt,
-    FilterOdd,
-    MapAbs,
-    MapMod,
-    MapParity,
-    MapSign,
-    Max,
-    Min,
-    Parity,
-    PrefixSum,
-    Reverse,
-    SeqOp,
-    SeqProgram,
-    Sort,
-    Sum,
-    Take,
-    Unique,
-    ZipAdd,
-    sample_programs_batch,
-)
-from src.models.harness import (
-    InputEncoder,
-    ModelConfig,
-    ModelFamily,
-    ModelHarness,
-    SklearnModelWrapper,
-    build_model,
-)
+from src.dsl.sequence_dsl import SeqProgram, sample_programs_batch
+from src.models.harness import InputEncoder
 from src.registry import TaskRegistry, TaskSpec, build_default_registry
-from src.splits import split_iid
 
 # ---------------------------------------------------------------------------
 # Shared artifact dataclass
 # ---------------------------------------------------------------------------
 
 
-@dataclass
+@dataclass(frozen=True)
 class BonusExperimentArtifact:
     experiment_id: str
     output_dir: Path
@@ -200,7 +166,7 @@ def _tree_structural_info(
     # Check if only relevant features are used
     relevant_set = set(relevant_features)
     used_set = set(used_features)
-    # A feature name like "cat1=A" should match to "cat1"
+    # A label-encoded feature keeps the base name (e.g. "cat1"); match it
     used_base_features = set()
     for f in used_set:
         base = f.split("=")[0] if "=" in f else f
@@ -459,14 +425,12 @@ def _validate_on_hard_test(
     n_hard_test: int,
     seed: int,
 ) -> float:
-    """Validate a candidate program against the reference algorithm on hard test inputs.
+    """Validate a candidate program against the reference algorithm on additional test inputs.
 
-    Uses longer/wider sequences than training to test extrapolation.
+    Samples new inputs via the task's input sampler using different seeds.
     """
-    rng = np.random.default_rng(seed)
     correct = 0
     total = 0
-    schema = task.input_schema
 
     for i in range(n_hard_test):
         inp = task.input_sampler(seed + 100000 + i)
@@ -535,17 +499,19 @@ def run_program_search_experiment(
             # Generate candidate programs
             candidates = _generate_candidate_programs(search_budget, max_depth, seed)
 
-            # Score each candidate against the oracle
-            scored: List[Tuple[float, SeqProgram]] = []
+            # Score each candidate against the oracle, tracking best incrementally
+            top_score = 0.0
+            top_prog: Optional[SeqProgram] = None
+            n_perfect = 0
             for prog in candidates:
                 score = _evaluate_program_against_oracle(prog, oracle_inputs, oracle_outputs)
-                scored.append((score, prog))
-
-            # Sort by score descending
-            scored.sort(key=lambda x: x[0], reverse=True)
-
-            top_score = scored[0][0] if scored else 0.0
-            top_prog = scored[0][1] if scored else None
+                if score >= 1.0:
+                    n_perfect += 1
+                if score > top_score:
+                    top_score = score
+                    top_prog = prog
+                    if score >= 1.0:
+                        break  # perfect match, no need to search further
 
             # Validate top candidate on hard test
             hard_test_acc = 0.0
@@ -561,7 +527,7 @@ def run_program_search_experiment(
                 "top_program_id": top_prog.program_id if top_prog else None,
                 "hard_test_accuracy": round(hard_test_acc, 4),
                 "n_candidates_evaluated": len(candidates),
-                "n_perfect_oracle_matches": sum(1 for s, _ in scored if s >= 1.0),
+                "n_perfect_oracle_matches": n_perfect,
             })
 
             if hard_test_acc > best_hard_test_score:

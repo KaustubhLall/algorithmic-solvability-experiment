@@ -114,4 +114,4 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-14 | Diagnostic Experiments | **PASS** | 21 tests, all passing |
 | V-15 | Bonus Experiments | **PASS** | 20 tests, all passing |
 
-Full suite status: **457 tests passing** (2 pre-existing LSTM/torch-related failures unrelated to any TASK-15 changes).
+Full suite status: **457 of 459 tests passing**. 2 pre-existing LSTM/torch-related failures (unrelated to any TASK-15 changes) remain as known issues.

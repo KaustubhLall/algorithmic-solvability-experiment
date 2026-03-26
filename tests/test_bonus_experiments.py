@@ -7,7 +7,6 @@ import json
 import pytest
 
 from src.bonus_experiments import (
-    BonusExperimentArtifact,
     _evaluate_program_against_oracle,
     _extract_tree_text,
     _generate_candidate_programs,
@@ -19,11 +18,9 @@ from src.bonus_experiments import (
 )
 from src.data_generator import generate_dataset
 from src.dsl.sequence_dsl import (
-    Compose,
     Reverse,
     SeqProgram,
     Sort,
-    Sum,
 )
 from src.registry import build_default_registry
 
