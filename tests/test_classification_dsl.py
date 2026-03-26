@@ -551,6 +551,26 @@ class TestAggregators:
         with pytest.raises(RuntimeError, match="evaluate_group"):
             clf.evaluate({"mean_x": 10.0})
 
+    def test_aggregate_classifier_group_key_mismatch_raises(self):
+        clf = AggregateClassifier(
+            aggregator=MeanAggregator(feature="x"),
+            virtual_feature_name="mean_x",
+            inner_classifier=IfThenElse(
+                predicate=Gt(feature="mean_x", threshold=10.0),
+                class_if_true="HIGH",
+                class_if_false="LOW",
+            ),
+            group_key="group_id",
+        )
+
+        with pytest.raises(ValueError, match="group_id"):
+            clf.evaluate_group(
+                [
+                    {"x": 5.0, "group_id": "A"},
+                    {"x": 15.0, "group_id": "B"},
+                ]
+            )
+
 
 # ===================================================================
 # 9. Rule Sampler Tests

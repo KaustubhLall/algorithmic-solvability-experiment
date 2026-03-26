@@ -74,4 +74,4 @@ V-10 validation: **56 tests, all passing** (pytest, 0.16s)
 
 ## Completion Summary
 
-TASK-03 delivered the full Sequence DSL in `src/dsl/sequence_dsl.py` (590 lines). The DSL covers 18+ primitives across 4 categories (list-to-list, parameterized, reducers, two-input), with typed sequential composition, a program sampler with depth control, and functional equivalence checking. All 56 V-10 tests pass. One minor deviation: reducers return single-element lists for uniform composability. The DSL is used by TASK-04 (Task Registry) for S-tier tasks and will be used by TASK-12 for S5-tier DSL program experiments.
+TASK-03 delivered the full Sequence DSL in `src/dsl/sequence_dsl.py`. The DSL covers 18+ primitives across 4 categories (list-to-list, parameterized, reducers, two-input), with typed sequential composition, a program sampler with depth control, and functional equivalence checking. All 56 V-10 tests pass. One minor deviation: reducers return single-element lists for uniform composability. The DSL is used by TASK-04 (Task Registry) for S-tier tasks and will be used by TASK-12 for S5-tier DSL program experiments.

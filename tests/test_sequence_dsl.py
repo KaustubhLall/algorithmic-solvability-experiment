@@ -401,6 +401,8 @@ class TestSampler:
         progs = sample_programs_batch(n=5, seed=42, max_depth=2)
         ids = [p.program_id for p in progs]
         assert len(set(ids)) == 5  # all unique
+        assert ids[0] == "prog_s42_d2"
+        assert ids[-1] == "prog_s46_d2"
 
 
 # ===================================================================

@@ -1483,7 +1483,7 @@ Each entry follows this template:
 - **Date:** 2025-03-25
 - **Task:** TASK-07 (SR-5)
 - **Type:** SCOPE_CHANGE
-- **What changed:** The planned file structure had `src/models/harness.py`, `src/models/configs.py`, and `src/models/encoders.py`. All code is in `harness.py` (459 lines).
+- **What changed:** The planned file structure had `src/models/harness.py`, `src/models/configs.py`, and `src/models/encoders.py`. All code is in `harness.py`.
 - **Why:** The total code volume doesn't justify 3 files. Splitting would create unnecessary import complexity.
 - **Impact:** All imports come from `src.models.harness`. No API impact. Will refactor if the file grows significantly.
 - **Resolution:** Accepted. Single file is cleaner at this scale.
