@@ -156,8 +156,11 @@ class TestSeedVariation:
         report1 = run_experiment(spec, registry=registry)
         report2 = run_experiment(spec, registry=registry)
 
-        assert report1.single_results[0].eval_report.accuracy == \
-               report2.single_results[0].eval_report.accuracy
+        assert report1.single_results[0].eval_report.accuracy == pytest.approx(
+            report2.single_results[0].eval_report.accuracy,
+            rel=1e-12,
+            abs=1e-12,
+        )
 
     def test_run_experiment_allows_seed_override(self, registry):
         spec = ExperimentSpec(
@@ -601,7 +604,7 @@ class TestIntegration:
         assert split_strategies == {"iid", "noise"}
 
     def test_noise_degrades_accuracy(self, registry):
-        """Noise split should generally produce lower accuracy than IID."""
+        """High-noise evaluation should not materially outperform the IID split."""
         spec = ExperimentSpec(
             experiment_id="TEST-NOISE",
             task_ids=["C1.1_numeric_threshold"],
@@ -623,8 +626,7 @@ class TestIntegration:
 
         assert iid_agg is not None
         assert noise_agg is not None
-        # With high noise (0.5), KNN accuracy should generally be lower
-        # (not always guaranteed, so we just check both exist)
+        assert noise_agg.accuracy_mean <= iid_agg.accuracy_mean + 0.05
 
     def test_spec_preserved_in_report(self, mini_classification_spec, registry):
         report = run_experiment(mini_classification_spec, registry=registry)

@@ -61,6 +61,30 @@ def _ensure_dir(path: Path) -> Path:
     return path
 
 
+def _resolve_experiment_dir(output_root: str | Path, experiment_id: str) -> Path:
+    """Validate experiment output paths before writing artifacts."""
+    output_root_path = Path(output_root)
+    output_root_resolved = output_root_path.resolve()
+
+    if not experiment_id or experiment_id in {".", ".."}:
+        raise ValueError(f"Invalid experiment_id: {experiment_id!r}")
+    if "/" in experiment_id or "\\" in experiment_id:
+        raise ValueError(
+            f"experiment_id must not contain path separators: {experiment_id!r}"
+        )
+
+    experiment_dir = output_root_path / experiment_id
+    experiment_dir_resolved = experiment_dir.resolve()
+    try:
+        experiment_dir_resolved.relative_to(output_root_resolved)
+    except ValueError as exc:
+        raise ValueError(
+            f"Resolved experiment directory is outside output_root: {experiment_dir_resolved}"
+        ) from exc
+
+    return experiment_dir
+
+
 def _write_json(path: Path, payload: Dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
@@ -363,25 +387,46 @@ def _aggregate_error_taxonomies(task_single_results: List[SingleRunResult]) -> D
 
 
 def _mean_confusion_matrix(results: List[SingleRunResult]) -> Optional[np.ndarray]:
-    matrices = [
-        np.array(result.eval_report.confusion_matrix, dtype=float)
-        for result in results
-        if result.eval_report.confusion_matrix is not None
-    ]
+    matrices: List[np.ndarray] = []
+    for result in results:
+        cm = result.eval_report.confusion_matrix
+        if cm is None:
+            continue
+        arr = np.array(cm, dtype=float)
+        if arr.size == 0 or arr.ndim != 2:
+            continue
+        matrices.append(arr)
+
     if not matrices:
         return None
-    return np.mean(matrices, axis=0)
+
+    target_shape = matrices[0].shape
+    compatible = [matrix for matrix in matrices if matrix.shape == target_shape]
+    if not compatible:
+        return None
+
+    return np.mean(compatible, axis=0)
 
 
 def _save_confusion_plot(task_dir: Path, task_results: List[SingleRunResult]) -> Optional[str]:
-    classification_runs = [result for result in task_results if result.eval_report.confusion_matrix is not None]
+    classification_runs = []
+    for result in task_results:
+        cm = result.eval_report.confusion_matrix
+        labels = result.eval_report.class_labels
+        if cm is None or labels is None:
+            continue
+        if len(cm) == 0 or len(labels) == 0:
+            continue
+        if len(cm) != len(labels) or any(len(row) != len(labels) for row in cm):
+            continue
+        classification_runs.append(result)
     if not classification_runs:
         return None
 
     preferred_runs = [result for result in classification_runs if result.split_strategy == IID_SPLIT]
     selected_runs = preferred_runs or classification_runs
     mean_cm = _mean_confusion_matrix(selected_runs)
-    if mean_cm is None:
+    if mean_cm is None or mean_cm.size == 0 or mean_cm.ndim != 2:
         return None
 
     labels = selected_runs[0].eval_report.class_labels or []
@@ -572,7 +617,9 @@ def generate_report(
     if registry is None:
         registry = build_default_registry()
 
-    base_dir = _ensure_dir(Path(output_root) / report.experiment_id)
+    base_dir = _ensure_dir(
+        _resolve_experiment_dir(output_root, str(report.experiment_id))
+    )
     per_task_dir = _ensure_dir(base_dir / "per_task")
 
     report_dict = experiment_report_to_dict(report)
@@ -613,3 +660,6 @@ def generate_report(
     )
 
     return base_dir
+
+
+generate_report_artifacts = generate_report

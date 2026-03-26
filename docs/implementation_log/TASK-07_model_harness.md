@@ -23,7 +23,7 @@
 | `build_model()` factory | `src/models/harness.py` | DONE |
 | `run_models()` convenience function | `src/models/harness.py` | DONE |
 | Concrete models: MajorityClass, SklearnModelWrapper, SequenceBaseline | `src/models/harness.py` | DONE |
-| V-5 test suite | `tests/test_model_harness.py` | DONE (33 tests) |
+| V-5 test suite | `tests/test_model_harness.py` | DONE (39 tests) |
 
 ---
 
@@ -48,7 +48,7 @@
 
 ## Acceptance Criteria Results
 
-V-5 validation: **33 tests, all passing** (pytest, 1.00s)
+V-5 validation: **39 tests, all passing** (pytest)
 
 | Check | Expected | Actual | Pass? |
 |---|---|---|---|

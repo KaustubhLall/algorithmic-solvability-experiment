@@ -302,6 +302,28 @@ class TestModelHarnessE2E:
         assert result.true_labels == []
         assert result.test_size == 0
 
+    def test_train_length_mismatch_raises(self, threshold_split):
+        config = ModelConfig(family=ModelFamily.DECISION_TREE)
+        harness = ModelHarness(config)
+        with pytest.raises(ValueError, match="train_inputs length"):
+            harness.run(
+                threshold_split.train_inputs[:-1],
+                threshold_split.train_outputs,
+                threshold_split.test_inputs,
+                threshold_split.test_outputs,
+            )
+
+    def test_test_length_mismatch_raises(self, threshold_split):
+        config = ModelConfig(family=ModelFamily.DECISION_TREE)
+        harness = ModelHarness(config)
+        with pytest.raises(ValueError, match="test_inputs length"):
+            harness.run(
+                threshold_split.train_inputs,
+                threshold_split.train_outputs,
+                threshold_split.test_inputs[:-1],
+                threshold_split.test_outputs,
+            )
+
 
 # ===================================================================
 # 8. run_models Convenience

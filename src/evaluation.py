@@ -16,11 +16,8 @@ Validated by: V-6 (Evaluation Engine Validation).
 
 from __future__ import annotations
 
-from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
 
 from src.registry import TaskSpec
 
@@ -79,6 +76,9 @@ class EvalReport:
     token_accuracy: Optional[float] = None
     error_taxonomy: Dict[str, int] = field(default_factory=dict)
     metadata_conditioned_metrics: Dict[str, Any] = field(default_factory=dict)
+
+
+UNKNOWN_CLASS_LABEL = "UNKNOWN"
 
 
 # ===================================================================
@@ -399,9 +399,21 @@ def _evaluate_classification(
 ) -> EvalReport:
     """Compute classification-specific metrics."""
     known_labels = sorted(set(ground_truth))
+    metric_labels = list(known_labels)
 
-    cm = _compute_confusion_matrix(predictions, ground_truth, known_labels)
-    per_class = _per_class_from_confusion(cm, known_labels)
+    unknown_bucket = UNKNOWN_CLASS_LABEL
+    if any(pred not in known_labels for pred in predictions):
+        while unknown_bucket in metric_labels:
+            unknown_bucket = f"_{unknown_bucket}"
+        metric_labels.append(unknown_bucket)
+
+    metric_predictions = [
+        pred if pred in known_labels else unknown_bucket
+        for pred in predictions
+    ]
+
+    cm = _compute_confusion_matrix(metric_predictions, ground_truth, metric_labels)
+    per_class = _per_class_from_confusion(cm, metric_labels)
     macro = _macro_f1(per_class)
     weighted = _weighted_f1(per_class)
     error_tax = _classification_error_taxonomy(predictions, ground_truth, known_labels)
@@ -416,7 +428,7 @@ def _evaluate_classification(
         macro_f1=macro,
         weighted_f1=weighted,
         confusion_matrix=cm,
-        class_labels=known_labels,
+        class_labels=metric_labels,
         exact_match=None,
         token_accuracy=None,
         error_taxonomy=error_tax,

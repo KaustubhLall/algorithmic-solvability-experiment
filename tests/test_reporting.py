@@ -20,7 +20,7 @@ import pytest
 from src.evaluation import EvalReport
 from src.models.harness import ModelConfig, ModelFamily
 from src.registry import build_default_registry
-from src.reporting import compute_solvability_verdict, generate_report
+from src.reporting import compute_solvability_verdict, generate_report, generate_report_artifacts
 from src.runner import AggregatedResult, ExperimentReport, ExperimentSpec, SingleRunResult
 from src.splits import SplitStrategy
 
@@ -201,6 +201,15 @@ class TestGenerateReportArtifacts:
 
         assert "# Cross-Task Comparison" in comparison
         assert "| C1.1_numeric_threshold | C1 | classification | 0.9700 | 0.8800 | MODERATE |" in comparison
+
+    def test_invalid_experiment_id_is_rejected(self, sample_experiment_report, registry, tmp_path):
+        sample_experiment_report.experiment_id = "../escape"
+        with pytest.raises(ValueError, match="experiment_id"):
+            generate_report(sample_experiment_report, output_root=tmp_path, registry=registry)
+
+    def test_backward_compatible_artifact_alias(self, sample_experiment_report, registry, tmp_path):
+        out_dir = generate_report_artifacts(sample_experiment_report, output_root=tmp_path, registry=registry)
+        assert out_dir == tmp_path / "TEST-REPORTING"
 
 
 class TestVerdictLogic:
