@@ -127,6 +127,20 @@ class TestPredictionShape:
         )
         assert len(result.predictions) == sort_split.test_size
 
+    def test_lstm_handles_unseen_tokens_in_test_inputs(self):
+        config = ModelConfig(
+            family=ModelFamily.LSTM,
+            hyperparams={"epochs": 2, "hidden_size": 16, "embedding_dim": 8, "batch_size": 4},
+        )
+        harness = ModelHarness(config)
+        result = harness.run(
+            train_inputs=[[0, 1], [1, 0], [1, 1], [0, 0]],
+            train_outputs=[[0, 1], [0, 1], [1, 1], [0, 0]],
+            test_inputs=[[2, 1], [3, 0]],
+            test_outputs=[[0, 1], [0, 0]],
+        )
+        assert len(result.predictions) == 2
+
 
 # ===================================================================
 # 3. Majority Class Baseline

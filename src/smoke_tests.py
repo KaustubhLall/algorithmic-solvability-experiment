@@ -41,11 +41,11 @@ def build_smoke_specs() -> Dict[str, ExperimentSpec]:
                 ModelConfig(
                     family=ModelFamily.LSTM,
                     hyperparams={
-                        "epochs": 100,
-                        "hidden_size": 64,
+                        "epochs": 200,
+                        "hidden_size": 96,
                         "embedding_dim": 32,
-                        "batch_size": 64,
-                        "learning_rate": 0.01,
+                        "batch_size": 32,
+                        "learning_rate": 0.005,
                     },
                 ),
             ],
