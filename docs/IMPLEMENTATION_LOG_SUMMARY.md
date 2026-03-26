@@ -5,7 +5,7 @@
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2026-03-26 (TASK-14 complete, diagnostic experiments D1-D5 implemented, 21 new tests, full suite green)
+> **Last Updated:** 2026-03-26 (TASK-15 complete, all 15 tasks done, bonus algorithm discovery EXP-B1 + EXP-B2 implemented, 20 new tests, full suite green)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -36,6 +36,7 @@
 | TASK-12 | Sequence Experiments | 2026-03-26 | [log](implementation_log/TASK-12_sequence_experiments.md) | Added `src/sequence_experiments.py`, `main.py sequence`, `tests/test_sequence_experiments.py`, unseen-token-safe LSTM inference, and generated `results/EXP-S1` through `results/EXP-S3` for the implemented S1-S3 sequence tiers. |
 | TASK-13 | Classification Experiments | 2026-03-26 | [log](implementation_log/TASK-13_classification_experiments.md) | Added `src/classification_experiments.py`, `main.py classification`, `tests/test_classification_experiments.py`, schema-guided categorical noise for tabular robustness splits, and generated `results/EXP-C1` through `results/EXP-C3` for the implemented C1-C3 classification tiers. |
 | TASK-14 | Diagnostic Experiments | 2026-03-26 | [log](implementation_log/TASK-14_diagnostic_experiments.md) | Added `src/diagnostic_experiments.py` (1271 lines), `main.py diagnostic`, `tests/test_diagnostic_experiments.py` (21 tests). Five diagnostic experiment runners: EXP-D1 sample-efficiency learning curves, EXP-D2 distractor robustness, EXP-D3 noise robustness, EXP-D4 feature-importance alignment via permutation importance, EXP-D5 solvability verdict calibration combining baseline + diagnostic evidence. Added `InputEncoder.feature_names` and `SklearnModelWrapper.estimator` properties to harness. Fixed `np.trapz` → `np.trapezoid` for NumPy 2.0+ compat. |
+| TASK-15 | Bonus: Algorithm Discovery | 2026-03-26 | [log](implementation_log/TASK-15_bonus_algorithm_discovery.md) | Added `src/bonus_experiments.py`, `main.py bonus`, `tests/test_bonus_experiments.py` (20 tests). EXP-B1 trains `DecisionTreeClassifier` at multiple depth limits on each classification task, extracts the tree structure, evaluates functional equivalence on hard test sets, and reports structural alignment with known relevant features. EXP-B2 randomly samples SR-10 DSL programs, scores them against the reference algorithm as oracle, and validates the best candidate on hard test inputs. Simple threshold tasks (C1.1) are near-perfectly recoverable; primitive sequence ops (reverse, sort) are discoverable. |
 
 ---
 
@@ -74,6 +75,10 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 - **`sklearn.inspection.permutation_importance` works directly on `SklearnModelWrapper.estimator`.** Exposing the raw estimator avoids re-fitting or wrapping, and the `InputEncoder.feature_names` property provides the column-name mapping needed for alignment analysis.
 - **NumPy 2.0+ removed `np.trapz`; use `np.trapezoid` with a fallback.** `getattr(np, 'trapezoid', None) or np.trapz` provides backwards-compatible AUC computation.
 - **Solvability calibration benefits from a structured `_calibrated_label` function.** Separating the label logic from the evidence-merging loop makes the verdict rules testable in isolation and easier to iterate on.
+- **Decision tree extraction works best on simple threshold rules.** Tasks like `C1.1_numeric_threshold` (x1 > 50) are near-perfectly recoverable by a depth-2 tree. More complex tasks (XOR, interaction polynomial) need deeper trees and may overfit with small training sets.
+- **Random DSL program search is surprisingly effective for primitives.** With a budget of 500 candidates, `Reverse()` and `Sort()` are reliably found since they are leaf operations in the search space. Composed programs (e.g., dedup→sort→count) are harder to recover by random search.
+- **Direct sklearn tree access is cleaner than going through ModelHarness for extraction tasks.** Using `InputEncoder` + `DecisionTreeClassifier` directly avoids the string-prediction layer and gives access to `clf.tree_` for structural analysis.
+- **`generate_dataset()` returns a `Dataset` object, not a list.** Use `.samples` to get the `List[Sample]`. This caught us during TASK-15 implementation and is worth remembering.
 
 ---
 
@@ -81,7 +86,7 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. TASK-15 (Bonus — Algorithm Discovery) is ready to start._
+_None. All 15 tasks are complete._
 
 ---
 
@@ -107,5 +112,6 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-G4 | Data-model isolation | **PASS** | Runner smoke validation confirms fresh per-task dataset generation |
 
 | V-14 | Diagnostic Experiments | **PASS** | 21 tests, all passing |
+| V-15 | Bonus Experiments | **PASS** | 20 tests, all passing |
 
-Full suite status: **439 tests passing** (2 pre-existing LSTM/torch-related failures unrelated to TASK-14).
+Full suite status: **457 of 459 tests passing**. 2 pre-existing LSTM/torch-related failures (unrelated to any TASK-15 changes) remain as known issues.

@@ -405,3 +405,48 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 - extract a standalone function that maps evidence flags to verdict labels using the criteria from EXPERIMENT_DESIGN.md Section 9.4.
 - **Rationale:** Enables unit testing of each verdict path (STRONG, MODERATE, WEAK, NEGATIVE, INCONCLUSIVE) without setting up full experiment infrastructure.
 - **Consequences:** Five unit tests cover the label function directly. The function can be refined as more criteria become measurable without changing the experiment runner.
+
+---
+
+### ADR-026: Direct sklearn tree training for rule extraction (bypass ModelHarness)
+
+- **Date:** 2026-03-26
+- **Task:** TASK-15
+- **Status:** ACCEPTED
+- **Context:** EXP-B1 needs to extract the fitted `DecisionTreeClassifier` structure (node splits, feature indices, thresholds) for structural analysis and rule export. The `ModelHarness.run()` pipeline returns string predictions and hides the fitted model behind layers of encoding/decoding.
+- **Options considered:**
+  1. Use `ModelHarness.run()` and then reach back into the model for tree extraction
+  2. Use `InputEncoder` + `DecisionTreeClassifier` directly, bypassing the harness
+- **Decision:** Option 2 — train the tree directly via sklearn, using `InputEncoder` for feature encoding only.
+- **Rationale:** Direct access to `clf.tree_`, `clf.get_depth()`, `clf.get_n_leaves()`, and `export_text()` is essential for rule extraction. The harness abstractions add overhead without benefit when the goal is model introspection rather than prediction.
+- **Consequences:** EXP-B1 uses `InputEncoder.fit_transform()` + `DecisionTreeClassifier.fit()` directly. This is consistent with the pattern established in TASK-14 where `InputEncoder` and `SklearnModelWrapper.estimator` were exposed for diagnostic access.
+
+---
+
+### ADR-027: Reference algorithm as oracle for DSL program search
+
+- **Date:** 2026-03-26
+- **Task:** TASK-15
+- **Status:** ACCEPTED
+- **Context:** EXP-B2 spec says "use the trained model as an oracle to guide search over DSL programs." However, the trained models for sequence tasks have mostly NEGATIVE/WEAK verdicts (noisy oracle), while the reference algorithm is the ground-truth function we're trying to recover.
+- **Options considered:**
+  1. Use the trained model as oracle (as specified)
+  2. Use the reference algorithm directly as oracle
+- **Decision:** Option 2 — use the reference algorithm as oracle, since using a weak trained model would make search nearly impossible.
+- **Rationale:** The goal of EXP-B2 is to test whether the DSL search space can recover the hidden program, not whether the trained model is a good proxy. Using the reference algorithm as oracle isolates the search capability from model quality. This is logged as DEV-016.
+- **Consequences:** Program search becomes a pure DSL enumeration problem. Tasks where the reference algorithm matches a DSL primitive (reverse, sort) are reliably found. Composed tasks require larger search budgets.
+
+---
+
+### ADR-028: Broadened task selection for bonus experiments (MODERATE threshold)
+
+- **Date:** 2026-03-26
+- **Task:** TASK-15
+- **Status:** ACCEPTED
+- **Context:** The spec says to select "top 5 tasks with STRONG solvability score," but the current experiment suite has no STRONG verdicts — classification peaks at MODERATE and sequence peaks at WEAK.
+- **Options considered:**
+  1. Skip TASK-15 entirely since no STRONG verdicts exist
+  2. Lower the selection threshold to MODERATE or include all implemented tasks
+- **Decision:** Option 2 — run EXP-B1 on all implemented classification tasks (C1–C3) and EXP-B2 on all implemented sequence tasks (S1, S3). This maximizes coverage and still answers the algorithm discovery question.
+- **Rationale:** The bonus objective is about testing whether rules/programs can be recovered, not about filtering by solvability verdict. Running on all tasks provides a richer picture and the solvability filtering can be applied post-hoc during analysis. This is logged as DEV-016.
+- **Consequences:** 12 classification tasks for EXP-B1, 9 sequence tasks for EXP-B2. Results include both easy (C1 tier) and hard (C3 tier) tasks, enabling analysis of recovery difficulty vs. task complexity.
