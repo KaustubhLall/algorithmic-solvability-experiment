@@ -5,7 +5,7 @@
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2026-03-26 (TASK-12 complete, sequence suite artifacts generated, full suite green)
+> **Last Updated:** 2026-03-26 (TASK-13 complete, classification suite artifacts generated, full suite green)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -25,7 +25,7 @@
 | TASK-01 | Input Schema (SR-2) | 2025-03-25 | [log](implementation_log/TASK-01_input_schema.md) | All 4 schema classes + 2 enums in `src/schemas.py`. 54 V-2 tests pass. |
 | TASK-02 | Classification Rule DSL (SR-9) | 2025-03-25 | [log](implementation_log/TASK-02_classification_dsl.md) | Predicates, combinators, classifiers, aggregators, rule sampler in `src/dsl/classification_dsl.py`. 58 V-9 tests pass. |
 | TASK-03 | Sequence DSL (SR-10) | 2025-03-25 | [log](implementation_log/TASK-03_sequence_dsl.md) | 18+ primitives, composition, program sampler, equivalence checking in `src/dsl/sequence_dsl.py`. 57 V-10 tests pass. |
-| TASK-04 | Task Registry (SR-1) | 2025-03-25 | [log](implementation_log/TASK-04_task_registry.md) | **FOUNDATION MILESTONE.** 28 tasks across S0-S3, C0-C3 in `src/registry.py`. 35 V-1 tests pass. |
+| TASK-04 | Task Registry (SR-1) | 2025-03-25 | [log](implementation_log/TASK-04_task_registry.md) | **FOUNDATION MILESTONE.** 32 tasks across S0-S3, C0-C3 in `src/registry.py`. 35 V-1 tests pass. |
 | TASK-05 | Data Generator (SR-3) | 2025-03-25 | [log](implementation_log/TASK-05_data_generator.md) | Label re-verification, noise injection, multi-task generation in `src/data_generator.py`. 23 V-3 tests pass. |
 | TASK-06 | Split Generator (SR-4) | 2025-03-25 | [log](implementation_log/TASK-06_split_generator.md) | **DATA PIPELINE MILESTONE.** 4 split strategies (IID, length, value, noise) in `src/splits.py`. 33 V-4 tests pass. |
 | TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 9 model families, unified encode->train->predict->decode pipeline in `src/models/harness.py`, now including a raw-sequence LSTM path. 38 V-5 tests pass. |
@@ -34,6 +34,7 @@
 | TASK-10 | Report Generator (SR-8) | 2026-03-25 | [log](implementation_log/TASK-10_report_generator.md) | Structured experiment artifact writing, per-task metrics/errors JSON, markdown summaries, plots, and solvability verdict computation in `src/reporting.py`. 9 V-8 tests pass. |
 | TASK-11 | Smoke Tests (EXP-0.x) | 2026-03-25 | [log](implementation_log/TASK-11_smoke_tests.md) | Added `src/smoke_tests.py`, a CLI entrypoint in `main.py`, a raw-sequence LSTM path in `src/models/harness.py`, 7 V-Global smoke tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. |
 | TASK-12 | Sequence Experiments | 2026-03-26 | [log](implementation_log/TASK-12_sequence_experiments.md) | Added `src/sequence_experiments.py`, `main.py sequence`, `tests/test_sequence_experiments.py`, unseen-token-safe LSTM inference, and generated `results/EXP-S1` through `results/EXP-S3` for the implemented S1-S3 sequence tiers. |
+| TASK-13 | Classification Experiments | 2026-03-26 | [log](implementation_log/TASK-13_classification_experiments.md) | Added `src/classification_experiments.py`, `main.py classification`, `tests/test_classification_experiments.py`, schema-guided categorical noise for tabular robustness splits, and generated `results/EXP-C1` through `results/EXP-C3` for the implemented C1-C3 classification tiers. |
 
 ---
 
@@ -64,6 +65,9 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 - **Sequence experiments need experiment-specific split menus.** Binary/stateful tasks such as `S2.1_cumulative_xor` and `S2.2_balanced_parens` do not have a meaningful value-range extrapolation regime, so TASK-12 keeps EXP-S2 on IID + length extrapolation only.
 - **Value extrapolation needs explicit unseen-token handling for neural sequence models.** The raw-sequence LSTM now maps unseen test-time tokens into an input-only unknown bucket so EXP-S1/EXP-S3 value-range runs complete instead of crashing.
 - **The current sequence baseline suite is mostly negative at today's supported scale.** Across `results/EXP-S1` through `results/EXP-S3`, only `S1.4_count_symbol` and `S2.2_balanced_parens` reached WEAK evidence; most other sequence tasks remained NEGATIVE under the present models/sample budgets.
+- **Classification noise needs schema-aware categorical perturbations.** Without task-schema-guided flips, categorical-only tasks such as `C1.3_categorical_match` get an IID duplicate instead of a real robustness split. TASK-13 therefore passes the input schema into the noise split so categorical values can be swapped within their valid domain.
+- **Mid-range value windows preserve label support for threshold-like tasks.** Using a training band such as `[20, 80]` keeps both sides of common thresholds represented while still leaving meaningful low/high tails for value extrapolation tests.
+- **The implemented classification suite is much stronger than the sequence suite at current scale.** Across `results/EXP-C1` through `results/EXP-C3`, 11 of 13 tasks reached `MODERATE`; only `C2.1_and_rule` stayed `WEAK` due to weak baseline separation and `C1.6_modular_class` remained `INCONCLUSIVE`.
 
 ---
 
@@ -71,7 +75,7 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. TASK-13 (Classification Experiments) is ready to start._
+_None. TASK-14 (Diagnostic Experiments) is ready to start._
 
 ---
 
@@ -96,4 +100,4 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-G3 | Trivial task ceiling | **PASS** | `EXP-0.2` decision tree/logistic regression reach 100% accuracy; verdict is MODERATE under current operationalization |
 | V-G4 | Data-model isolation | **PASS** | Runner smoke validation confirms fresh per-task dataset generation |
 
-Full suite status: **414 tests passing**.
+Full suite status: **418 tests passing**.

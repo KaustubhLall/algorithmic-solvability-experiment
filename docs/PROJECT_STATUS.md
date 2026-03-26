@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2026-03-26
-> **Current Phase:** Implementation - TASK-12 complete (sequence baseline suite landed, TASK-13 next)
+> **Current Phase:** Implementation - TASK-13 complete (classification baseline suite landed, TASK-14 next)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-13: Classification Experiments |
+| **Next task to implement** | TASK-14: Diagnostic Experiments |
 | **Status** | READY TO START |
-| **Blocked by** | Nothing - TASK-12 shipped and validation is green |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-C1 to EXP-C5), Part 4 (TASK-13) |
+| **Blocked by** | Nothing - TASK-12 and TASK-13 shipped, validation is green |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-D1 to EXP-D5), Part 4 (TASK-14) |
 
 ---
 
@@ -41,7 +41,7 @@
 | TASK-01 | Input Schema (SR-2) | **COMPLETE** | 54 V-2 tests pass. See [log](implementation_log/TASK-01_input_schema.md) |
 | TASK-02 | Classification Rule DSL (SR-9) | **COMPLETE** | 58 V-9 tests pass. See [log](implementation_log/TASK-02_classification_dsl.md) |
 | TASK-03 | Sequence DSL (SR-10) | **COMPLETE** | 57 V-10 tests pass. See [log](implementation_log/TASK-03_sequence_dsl.md) |
-| TASK-04 | Task Registry (SR-1) | **COMPLETE** | 35 V-1 tests pass. 28 tasks registered. See [log](implementation_log/TASK-04_task_registry.md) |
+| TASK-04 | Task Registry (SR-1) | **COMPLETE** | 35 V-1 tests pass. 32 tasks registered. See [log](implementation_log/TASK-04_task_registry.md) |
 | TASK-05 | Data Generator (SR-3) | **COMPLETE** | 23 V-3 tests pass. See [log](implementation_log/TASK-05_data_generator.md) |
 | TASK-06 | Split Generator (SR-4) | **COMPLETE** | 33 V-4 tests pass. See [log](implementation_log/TASK-06_split_generator.md) |
 | TASK-07 | Model Harness (SR-5) | **COMPLETE** | 38 V-5 tests pass. 9 model families including a raw-sequence LSTM path. See [log](implementation_log/TASK-07_model_harness.md) |
@@ -50,7 +50,7 @@
 | TASK-10 | Report Generator (SR-8) | **COMPLETE** | 9 V-8 tests pass. Structured artifacts, plots, markdown summaries, and solvability verdict logic in `src/reporting.py`. See [log](implementation_log/TASK-10_report_generator.md) |
 | TASK-11 | Smoke Tests (EXP-0.x) | **COMPLETE** | **GATE CLEARED.** `src/smoke_tests.py`, `main.py`, 7 V-Global tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. LSTM reaches 90.5% exact match on bounded sort; C1.1 smoke is MODERATE with perfect tree/logistic accuracy; control tasks are NEGATIVE. See [log](implementation_log/TASK-11_smoke_tests.md) |
 | TASK-12 | Sequence Experiments | **COMPLETE** | Added `src/sequence_experiments.py`, CLI support in `main.py`, `tests/test_sequence_experiments.py`, refreshed smoke-compatible LSTM handling for unseen tokens, and generated `results/EXP-S1` through `results/EXP-S3`. Current sequence verdicts are mostly NEGATIVE, with WEAK evidence on `S1.4_count_symbol` and `S2.2_balanced_parens`. See [log](implementation_log/TASK-12_sequence_experiments.md) |
-| TASK-13 | Classification Experiments | NOT STARTED | Depends on TASK-11 |
+| TASK-13 | Classification Experiments | **COMPLETE** | Added `src/classification_experiments.py`, CLI support in `main.py`, `tests/test_classification_experiments.py`, schema-guided categorical noise for tabular `NOISE` splits, and generated `results/EXP-C1` through `results/EXP-C3`. Current classification verdicts are mostly MODERATE across the implemented C1-C3 tasks, with `C2.1_and_rule` at WEAK and `C1.6_modular_class` at INCONCLUSIVE. See [log](implementation_log/TASK-13_classification_experiments.md) |
 | TASK-14 | Diagnostic Experiments | NOT STARTED | Depends on TASK-12-13 |
 | TASK-15 | Bonus: Algorithm Discovery | NOT STARTED | Depends on TASK-14 |
 
@@ -60,6 +60,7 @@
 - `[x]` FULL PIPELINE complete (TASK-07-10 done + V-5 through V-8 passing)
 - `[x]` SMOKE TEST GATE cleared (TASK-11 done + V-G1-G4 passing)
 - `[x]` SEQUENCE BASELINE SUITE complete (TASK-12 done for implemented S1-S3 tiers + `results/EXP-S1` through `results/EXP-S3`)
+- `[x]` CLASSIFICATION BASELINE SUITE complete (TASK-13 done for implemented C1-C3 tiers + `results/EXP-C1` through `results/EXP-C3`)
 
 ---
 
@@ -84,11 +85,13 @@ DataScience/
 |       |-- TASK-08_evaluation_engine.md
 |       |-- TASK-09_experiment_runner.md
 |       |-- TASK-10_report_generator.md
-|       `-- TASK-11_smoke_tests.md
+|       |-- TASK-11_smoke_tests.md
+|       |-- TASK-12_sequence_experiments.md
+|       `-- TASK-13_classification_experiments.md
 |-- src/
 |   |-- __init__.py
 |   |-- schemas.py                    # SR-2 built
-|   |-- registry.py                   # SR-1 built (28 tasks)
+|   |-- registry.py                   # SR-1 built (32 tasks)
 |   |-- data_generator.py             # SR-3 built
 |   |-- splits.py                     # SR-4 built
 |   |-- evaluation.py                 # SR-6 built
@@ -96,6 +99,7 @@ DataScience/
 |   |-- reporting.py                  # SR-8 built
 |   |-- smoke_tests.py                # TASK-11 smoke experiment specs + runners
 |   |-- sequence_experiments.py       # TASK-12 sequence experiment specs + runners
+|   |-- classification_experiments.py # TASK-13 classification experiment specs + runners
 |   |-- dsl/
 |   |   |-- __init__.py
 |   |   |-- classification_dsl.py     # SR-9 built
@@ -103,7 +107,7 @@ DataScience/
 |   `-- models/
 |       |-- __init__.py
 |       `-- harness.py                # SR-5 built (9 families)
-|-- tests/                            # Validation suite (403 tests total)
+|-- tests/                            # Validation suite (418 tests total)
 |   |-- __init__.py
 |   |-- test_schemas.py               # V-2: 54 tests
 |   |-- test_classification_dsl.py    # V-9: 58 tests
@@ -115,8 +119,9 @@ DataScience/
 |   |-- test_evaluation.py            # V-6: 53 tests
 |   |-- test_runner.py                # V-7: 36 tests
 |   |-- test_reporting.py             # V-8: 9 tests
-|   `-- test_smoke_tests.py           # V-G1..V-G4: 7 tests
-|   `-- test_sequence_experiments.py  # TASK-12 sequence experiment coverage
+|   |-- test_smoke_tests.py           # V-G1..V-G4: 7 tests
+|   |-- test_sequence_experiments.py  # TASK-12 sequence experiment coverage
+|   `-- test_classification_experiments.py # TASK-13 classification experiment coverage
 |-- results/
 |-- conftest.py
 |-- requirements.txt
@@ -138,6 +143,8 @@ DataScience/
 - **DEV-009:** TASK-11 classification smoke calibration expands EXP-0.2 beyond the original single-seed IID spec so the current verdict logic can evaluate baseline separation, extrapolation, and seed stability; under the current operationalization, V-G3 is satisfied by `MODERATE` or better rather than requiring `STRONG`.
 - **DEV-010:** TASK-12 executes the currently implemented sequence tiers (`EXP-S1` through `EXP-S3`) and keeps `EXP-S4`/`EXP-S5` deferred until their registry tasks and split strategies exist.
 - **DEV-011:** TASK-12 sequence runs use the currently validated model families (`majority_class`, `sequence_baseline`, `mlp`, `lstm`) and replace EXP-S3's cataloged composition split with the available value-range extrapolation split until transformer/composition support lands.
+- **DEV-012:** TASK-13 executes the currently implemented classification tiers (`EXP-C1` through `EXP-C3`) and keeps the remaining catalog-only classification tasks plus `EXP-C4`/`EXP-C5` deferred until their registry coverage exists.
+- **DEV-013:** TASK-13 classification runs use the currently validated model families (`majority_class`, `logistic_regression`, `decision_tree`, `random_forest`, `gradient_boosted_trees`, `mlp`) and the available OOD splits (`value_extrapolation`, `noise`) instead of the catalog's broader split/architecture matrix.
 
 See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 

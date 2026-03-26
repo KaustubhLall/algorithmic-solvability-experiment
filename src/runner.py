@@ -148,6 +148,7 @@ class ExperimentReport:
 
 def _apply_split(
     dataset: Any,
+    task: TaskSpec,
     strategy: SplitStrategy,
     spec: ExperimentSpec,
     seed: int,
@@ -156,6 +157,8 @@ def _apply_split(
 
     Args:
         dataset: The generated dataset.
+        task: Task metadata used to choose split-specific behavior such as
+            schema-guided categorical noise.
         strategy: Which split strategy to use.
         spec: Experiment spec (for split parameters).
         seed: Random seed.
@@ -171,6 +174,7 @@ def _apply_split(
             train_fraction=spec.train_fraction,
             test_noise_level=spec.noise_level,
             seed=seed,
+            schema=task.input_schema,
         )
     elif strategy == SplitStrategy.LENGTH_EXTRAPOLATION:
         if spec.length_threshold is None:
@@ -345,7 +349,7 @@ def run_experiment(
 
             for strategy in spec.split_strategies:
                 try:
-                    split = _apply_split(dataset, strategy, spec, seed)
+                    split = _apply_split(dataset, task, strategy, spec, seed)
                 except (ValueError, TypeError) as e:
                     if str(e).startswith("Unknown split strategy:"):
                         raise

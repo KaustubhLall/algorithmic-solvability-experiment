@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2026-03-25 (TASK-11 complete)
+> **Last Updated:** 2026-03-26 (TASK-13 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -326,3 +326,19 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 3 - add an input-only unknown-token bucket for `LSTMSequenceModel` while keeping the output vocabulary tied to train-time targets.
 - **Rationale:** This preserves the integrity of the train/test boundary, avoids inference crashes, and keeps smoke-task behavior recoverable with targeted hyperparameter tuning.
 - **Consequences:** Value-range sequence runs now complete cleanly, but the current LSTM still cannot generate exact unseen output symbols without a stronger copy/pointer mechanism.
+
+---
+
+### ADR-021: Use task-schema-guided categorical flips for tabular noise splits
+
+- **Date:** 2026-03-26
+- **Task:** TASK-13
+- **Status:** ACCEPTED
+- **Context:** TASK-13 adds classification experiments over mixed numerical/categorical tasks. The existing `NOISE` split only perturbed floating-point fields, so categorical-only tasks such as `C1.3_categorical_match` received an IID-equivalent test set instead of a real robustness check.
+- **Options considered:**
+  1. Leave the `NOISE` split numeric-only and accept no-op robustness runs for categorical tasks
+  2. Flip categoricals to arbitrary placeholder tokens not defined by the schema
+  3. Use the task's `TabularInputSchema` to perturb categorical features only within their valid value set
+- **Decision:** Option 3 - thread the task schema into `split_with_noise()` and sample alternate categorical values from each feature's declared domain.
+- **Rationale:** This preserves valid inputs, keeps labels tied to the clean examples as intended by ADR-004, and turns the `NOISE` split into a meaningful robustness regime for mixed-type tasks.
+- **Consequences:** `run_experiment()` now passes `task.input_schema` into tabular noise splits. Categorical classification tasks get genuine perturbation-based OOD evaluation without introducing invalid category tokens.

@@ -48,6 +48,12 @@ def threshold_dataset(registry):
     return generate_dataset(task, n_samples=200, base_seed=42)
 
 
+@pytest.fixture(scope="module")
+def categorical_match_dataset(registry):
+    task = registry.get("C1.3_categorical_match")
+    return generate_dataset(task, n_samples=200, base_seed=42)
+
+
 # ===================================================================
 # 1. IID Split
 # ===================================================================
@@ -276,3 +282,33 @@ class TestClassificationSplits:
             clean = task.input_sampler(s.seed)
             expected = task.reference_algorithm(clean)
             assert s.output_data == expected
+
+    def test_noise_on_categorical_tabular_uses_schema_values(
+        self,
+        categorical_match_dataset,
+        registry,
+    ):
+        task = registry.get("C1.3_categorical_match")
+        cat1_spec = next(
+            feature
+            for feature in task.input_schema.categorical_features
+            if feature.name == "cat1"
+        )
+        allowed_values = set(cat1_spec.values)
+        result = split_noise(
+            categorical_match_dataset,
+            test_noise_level=1.0,
+            seed=42,
+            schema=task.input_schema,
+        )
+
+        modified = 0
+        for s in result.test:
+            clean = task.input_sampler(s.seed)
+            expected = task.reference_algorithm(clean)
+            assert s.output_data == expected
+            assert s.input_data["cat1"] in allowed_values
+            if s.input_data != clean:
+                modified += 1
+
+        assert modified > 0
