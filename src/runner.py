@@ -20,10 +20,9 @@ import numpy as np
 
 from src.data_generator import generate_dataset
 from src.evaluation import EvalReport, evaluate, eval_report_to_dict
-from src.models.harness import ModelConfig, ModelHarness, PredictionResult
+from src.models.harness import ModelConfig, ModelHarness
 from src.registry import TaskRegistry, TaskSpec, build_default_registry
 from src.splits import (
-    SplitGenerator,
     SplitResult,
     SplitStrategy,
     split_iid,
@@ -348,6 +347,8 @@ def run_experiment(
                 try:
                     split = _apply_split(dataset, strategy, spec, seed)
                 except (ValueError, TypeError) as e:
+                    if str(e).startswith("Unknown split strategy:"):
+                        raise
                     logger.warning(
                         "Skipping split %s for task %s seed %d: %s",
                         strategy.value, task_id, seed, e,

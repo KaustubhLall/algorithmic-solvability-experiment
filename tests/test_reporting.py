@@ -119,6 +119,11 @@ class TestArtifactGeneration:
         assert "C1.1_numeric_threshold" in summary_md
         assert "TEST-REPORTING" in summary_md
 
+    def test_invalid_experiment_id_is_rejected(self, mini_report, registry, tmp_path):
+        mini_report.experiment_id = "../escape"
+        with pytest.raises(ValueError, match="experiment_id"):
+            generate_report_artifacts(mini_report, output_root=tmp_path, registry=registry)
+
 
 class TestSolvabilityLogic:
 

@@ -412,6 +412,17 @@ class ModelHarness:
         Returns:
             PredictionResult with string predictions and true labels.
         """
+        if len(train_inputs) != len(train_outputs):
+            raise ValueError(
+                f"train_inputs length ({len(train_inputs)}) != "
+                f"train_outputs length ({len(train_outputs)})"
+            )
+        if len(test_inputs) != len(test_outputs):
+            raise ValueError(
+                f"test_inputs length ({len(test_inputs)}) != "
+                f"test_outputs length ({len(test_outputs)})"
+            )
+
         # Stringify outputs for uniform handling
         train_labels_str = [str(o) for o in train_outputs]
         test_labels_str = [str(o) for o in test_outputs]

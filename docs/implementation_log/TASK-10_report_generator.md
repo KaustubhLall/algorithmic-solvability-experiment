@@ -2,7 +2,7 @@
 
 > **Status:** COMPLETE
 > **Builds:** SR-8
-> **Validation:** V-8 (6 tests passing)
+> **Validation:** V-8 (7 tests passing)
 > **Spec:** `EXPERIMENT_CATALOG.md` Part 1 (SR-8), Part 3 (V-8), Part 4 (TASK-10)
 > **Date Started:** 2026-03-25
 > **Date Completed:** 2026-03-25
@@ -22,7 +22,7 @@
 | Per-task `extrap_curve.png` | `src/reporting.py` | DONE |
 | `comparison.md` cross-task table | `src/reporting.py` | DONE |
 | `solvability_verdicts.json` with Section 9.4 logic | `src/reporting.py` | DONE |
-| V-8 validation suite | `tests/test_reporting.py` | DONE (6 tests) |
+| V-8 validation suite | `tests/test_reporting.py` | DONE (7 tests) |
 
 ---
 
@@ -59,9 +59,9 @@
 
 ## Acceptance Criteria Results
 
-V-8 validation: **6 tests, all passing** (`tests/test_reporting.py`, 1.19s)
+V-8 validation: **7 tests, all passing** (`tests/test_reporting.py`, 1.24s)
 
-Additional regression validation: **full test suite passes** (`.venv\Scripts\python.exe -m pytest -q`, `392 passed, 4 warnings`, 2.68s)
+Additional regression validation: **full test suite passes** (`.venv\Scripts\python.exe -m pytest -q`, `395 passed, 4 warnings`, 2.67s)
 
 | Check | Expected | Actual | Pass? |
 |---|---|---|---|
@@ -81,4 +81,4 @@ None. TASK-10 was completed without changing the SR-8 deliverable list or accept
 
 ## Completion Summary
 
-TASK-10 delivered the full SR-8 reporting layer in `src/reporting.py` (729 lines) together with a focused V-8 suite in `tests/test_reporting.py` (6 tests). The report generator now turns any `ExperimentReport` from SR-7 into a durable artifact tree with JSON summaries, Markdown summaries/comparisons, per-task plots, and structured solvability verdicts that encode both the Section 9.4 label and the supporting evidence. The main design challenge was turning the design document's qualitative solvability criteria into deterministic report logic without over-claiming from incomplete experiments; the chosen solution keeps the labels criteria-driven and treats the weighted score as supporting evidence rather than a label shortcut. TASK-11 can now run smoke experiments and persist their artifacts directly through SR-8 without additional reporting glue.
+TASK-10 delivered the full SR-8 reporting layer in `src/reporting.py` (761 lines) together with a focused V-8 suite in `tests/test_reporting.py` (7 tests). The report generator now turns any `ExperimentReport` from SR-7 into a durable artifact tree with JSON summaries, Markdown summaries/comparisons, per-task plots, and structured solvability verdicts that encode both the Section 9.4 label and the supporting evidence. Follow-up hardening also added experiment-id path validation and confusion-matrix plotting guards so report generation stays safe and deterministic under unusual inputs. TASK-11 can now run smoke experiments and persist their artifacts directly through SR-8 without additional reporting glue.

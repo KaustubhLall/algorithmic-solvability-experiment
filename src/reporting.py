@@ -467,12 +467,49 @@ def _write_json(path: Path, payload: Dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
+def _resolve_experiment_dir(output_root: str | Path, experiment_id: str) -> Path:
+    """Validate experiment output paths before removing or writing directories."""
+    output_root_path = Path(output_root)
+    output_root_resolved = output_root_path.resolve()
+
+    if not experiment_id or experiment_id in {".", ".."}:
+        raise ValueError(f"Invalid experiment_id: {experiment_id!r}")
+    if "/" in experiment_id or "\\" in experiment_id:
+        raise ValueError(
+            f"experiment_id must not contain path separators: {experiment_id!r}"
+        )
+
+    experiment_dir = output_root_path / experiment_id
+    experiment_dir_resolved = experiment_dir.resolve()
+    try:
+        experiment_dir_resolved.relative_to(output_root_resolved)
+    except ValueError as exc:
+        raise ValueError(
+            f"Resolved experiment directory is outside output_root: {experiment_dir_resolved}"
+        ) from exc
+
+    return experiment_dir
+
+
+def _has_plottable_confusion_matrix(result: SingleRunResult) -> bool:
+    report = result.eval_report
+    matrix = report.confusion_matrix
+    labels = report.class_labels
+    if matrix is None or labels is None:
+        return False
+    if len(matrix) == 0 or len(labels) == 0:
+        return False
+    if len(matrix) != len(labels):
+        return False
+    return all(len(row) == len(labels) for row in matrix)
+
+
 def _pick_confusion_source(single_results: Sequence[SingleRunResult]) -> Optional[SingleRunResult]:
     candidates = [
         result
         for result in single_results
         if result.eval_report.track == "classification"
-        and result.eval_report.confusion_matrix is not None
+        and _has_plottable_confusion_matrix(result)
     ]
     if not candidates:
         return None
@@ -488,6 +525,8 @@ def _pick_confusion_source(single_results: Sequence[SingleRunResult]) -> Optiona
 
 def _plot_confusion_matrix(path: Path, result: SingleRunResult) -> None:
     report = result.eval_report
+    if not _has_plottable_confusion_matrix(result):
+        raise ValueError("Result does not contain a plottable confusion matrix")
     assert report.confusion_matrix is not None
     assert report.class_labels is not None
 
@@ -796,7 +835,7 @@ def generate_report_artifacts(
     if registry is None:
         registry = build_default_registry()
 
-    experiment_dir = Path(output_root) / report.experiment_id
+    experiment_dir = _resolve_experiment_dir(output_root, str(report.experiment_id))
     if experiment_dir.exists():
         shutil.rmtree(experiment_dir)
     per_task_dir = experiment_dir / "per_task"

@@ -478,7 +478,6 @@ class AggregateClassifier(Classifier):
     aggregator: Aggregator
     virtual_feature_name: str
     inner_classifier: Classifier
-    group_key: Optional[str] = None
 
     def evaluate_group(self, rows: List[Dict[str, Any]]) -> str:
         """Classify a group of rows."""

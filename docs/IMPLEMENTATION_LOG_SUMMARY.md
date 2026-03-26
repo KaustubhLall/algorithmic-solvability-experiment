@@ -28,10 +28,10 @@
 | TASK-04 | Task Registry (SR-1) | 2025-03-25 | [log](implementation_log/TASK-04_task_registry.md) | **FOUNDATION MILESTONE.** 28 tasks across S0-S3, C0-C3 in `src/registry.py`. 35 V-1 tests pass. |
 | TASK-05 | Data Generator (SR-3) | 2025-03-25 | [log](implementation_log/TASK-05_data_generator.md) | Label re-verification, noise injection, multi-task generation in `src/data_generator.py`. 23 V-3 tests pass. |
 | TASK-06 | Split Generator (SR-4) | 2025-03-25 | [log](implementation_log/TASK-06_split_generator.md) | **DATA PIPELINE MILESTONE.** 4 split strategies (IID, length, value, noise) in `src/splits.py`. 33 V-4 tests pass. |
-| TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 8 model families, unified encode->train->predict->decode pipeline in `src/models/harness.py`. 37 V-5 tests pass. |
+| TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 8 model families, unified encode->train->predict->decode pipeline in `src/models/harness.py`. 39 V-5 tests pass. |
 | TASK-08 | Evaluation Engine (SR-6) | 2025-03-25 | [log](implementation_log/TASK-08_evaluation_engine.md) | Classification + sequence metric dispatch, confusion matrix, per-class P/R/F1, error taxonomy, metadata-conditioned breakdowns in `src/evaluation.py`. 53 V-6 tests pass. |
 | TASK-09 | Experiment Runner (SR-7) | 2026-03-25 | [log](implementation_log/TASK-09_experiment_runner.md) | Multi-seed experiment orchestration, aggregation, progress logging, and JSON-ready serialization in `src/runner.py`. 36 V-7 tests pass. |
-| TASK-10 | Report Generator (SR-8) | 2026-03-25 | [log](implementation_log/TASK-10_report_generator.md) | **FULL PIPELINE MILESTONE.** Structured experiment artifacts, per-task plots, markdown summaries, and solvability verdict logic in `src/reporting.py`. 6 V-8 tests pass. |
+| TASK-10 | Report Generator (SR-8) | 2026-03-25 | [log](implementation_log/TASK-10_report_generator.md) | **FULL PIPELINE MILESTONE.** Structured experiment artifacts, per-task plots, markdown summaries, and solvability verdict logic in `src/reporting.py`. 7 V-8 tests pass. |
 
 ---
 
@@ -78,10 +78,10 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-2 | Input Schema | **PASS** | 54 tests, all passing |
 | V-3 | Data Generator | **PASS** | 23 tests, all passing (0.23s) |
 | V-4 | Split Generator | **PASS** | 33 tests, all passing |
-| V-5 | Model Harness | **PASS** | 37 tests, all passing |
+| V-5 | Model Harness | **PASS** | 39 tests, all passing |
 | V-6 | Evaluation Engine | **PASS** | 53 tests, all passing |
 | V-7 | Experiment Runner | **PASS** | 36 tests, all passing |
-| V-8 | Report Generator | **PASS** | 6 tests, all passing |
+| V-8 | Report Generator | **PASS** | 7 tests, all passing |
 | V-9 | Classification Rule DSL | **PASS** | 58 tests, all passing |
 | V-10 | Sequence DSL | **PASS** | 57 tests, all passing |
 | V-G1 | Round-trip check | NOT RUN | |
@@ -89,4 +89,4 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-G3 | Trivial task ceiling | NOT RUN | |
 | V-G4 | Data-model isolation | NOT RUN | |
 
-Full-suite status: `392 passed, 4 warnings` (`.venv\Scripts\python.exe -m pytest -q`, 2.68s)
+Full-suite status: `395 passed, 4 warnings` (`.venv\Scripts\python.exe -m pytest -q`, 2.67s)

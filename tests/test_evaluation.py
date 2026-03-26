@@ -445,6 +445,9 @@ class TestErrorTaxonomy:
         assert report.error_taxonomy["correct"] == 1
         assert report.error_taxonomy["unknown_class"] == 1
         assert report.error_taxonomy["wrong_class"] == 0
+        assert report.class_labels == ["A", "B", "UNKNOWN"]
+        assert report.confusion_matrix == [[1, 0, 0], [0, 0, 1], [0, 0, 0]]
+        assert sum(sum(row) for row in report.confusion_matrix) == report.n_samples
 
     def test_sequence_off_by_one(self):
         task = _make_sequence_task()

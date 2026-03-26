@@ -546,7 +546,6 @@ class TestAggregators:
                 class_if_true="HIGH",
                 class_if_false="LOW",
             ),
-            group_key="group_id",
         )
         assert clf.evaluate_group([{"x": 5.0}, {"x": 15.0}]) == "LOW"
         with pytest.raises(RuntimeError, match="evaluate_group"):
