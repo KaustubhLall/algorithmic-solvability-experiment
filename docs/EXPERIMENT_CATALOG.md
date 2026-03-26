@@ -1514,6 +1514,18 @@ Each entry follows this template:
 
 ---
 
+### DEV-009: TASK-11 classification smoke gate expanded to match current solvability calibration
+
+- **Date:** 2026-03-25
+- **Task:** TASK-11 (EXP-0.2, V-G3)
+- **Type:** CRITERIA_CHANGE
+- **What changed:** The original EXP-0.2 smoke spec used logistic regression / decision tree / MLP on a single IID split with one seed. TASK-11 expanded this run to include the `majority_class` baseline, a `NOISE` split, and 5 seeds. Under the current SR-8 operationalization, V-G3 is satisfied by `MODERATE` or better rather than requiring `STRONG`.
+- **Why:** ADR-017 makes `STRONG` depend on evidence criteria that are still intentionally unmeasured before the diagnostic tasks, and even `MODERATE` requires baseline separation, extrapolation success, and seed stability. The original smoke layout could therefore validate raw performance but not the current solvability logic.
+- **Impact:** `results/EXP-0.2/` now demonstrates the trivial-task ceiling with enough evidence for the current reporting layer: decision tree and logistic regression achieve 100% accuracy on both IID and noisy splits across 5 seeds, and the task receives a `MODERATE` verdict.
+- **Resolution:** Accepted for TASK-11 and documented in ADR-018/019 plus the TASK-11 implementation log.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
