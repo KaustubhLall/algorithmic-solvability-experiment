@@ -1603,6 +1603,30 @@ Each entry follows this template:
 
 ---
 
+### DEV-016: Broadened task selection and reference-algorithm oracle for TASK-15
+
+- **Date:** 2026-03-26
+- **Task:** TASK-15 (EXP-B1, EXP-B2)
+- **Type:** SCOPE_ADAPTATION
+- **What changed:** EXP-B1 runs on all implemented classification tasks (C1–C3, 12 tasks) rather than only the top 5 STRONG tasks. EXP-B2 runs on all implemented S1/S3 sequence tasks (9 tasks) rather than only S5-tier STRONG tasks. EXP-B2 uses the reference algorithm as oracle instead of a trained model.
+- **Why:** The current experiment suite has no STRONG solvability verdicts (classification peaks at MODERATE, sequence at WEAK). Using a trained model with WEAK verdicts as oracle would make program search nearly impossible. Running on all tasks maximizes coverage.
+- **Impact:** EXP-B1 covers 12 classification tasks across C1–C3 tiers. EXP-B2 covers 9 sequence tasks. Program search is a pure DSL enumeration problem rather than model-guided search.
+- **Resolution:** Results include both easy (C1/S1) and hard (C3/S3) tasks for richer analysis. Solvability filtering can be applied post-hoc. Logged as ADR-027 and ADR-028.
+
+---
+
+### DEV-017: Direct sklearn tree training for EXP-B1 rule extraction
+
+- **Date:** 2026-03-26
+- **Task:** TASK-15 (EXP-B1)
+- **Type:** IMPLEMENTATION_CHOICE
+- **What changed:** EXP-B1 uses `InputEncoder` + `DecisionTreeClassifier` directly rather than going through `ModelHarness.run()`.
+- **Why:** Rule extraction requires access to the fitted tree structure (`clf.tree_`, `clf.get_depth()`, `export_text()`). The `ModelHarness` abstracts this away behind string predictions.
+- **Impact:** EXP-B1 can extract tree text, count nodes/leaves, identify which features are used in splits, and compare structural alignment with known relevant features.
+- **Resolution:** Consistent with TASK-14 pattern of exposing harness internals for diagnostic/analysis tasks. Logged as ADR-026.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
@@ -1622,7 +1646,7 @@ Major architectural or design decisions made during implementation that are not 
 
 ### Entries
 
-_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-025._
+_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-028._
 
 ---
 

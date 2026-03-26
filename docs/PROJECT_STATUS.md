@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2026-03-26
-> **Current Phase:** Implementation - TASK-14 complete (diagnostic experiments landed, TASK-15 next)
+> **Current Phase:** Implementation complete — all 15 tasks done (bonus algorithm discovery landed)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-15: Bonus — Algorithm Discovery |
-| **Status** | READY TO START |
-| **Blocked by** | Nothing - TASK-14 shipped, 21 diagnostic tests pass |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-B1, EXP-B2), Part 4 (TASK-15) |
+| **Next task to implement** | All 15 tasks complete. Project implementation finished. |
+| **Status** | DONE |
+| **Blocked by** | Nothing |
+| **Relevant spec** | All experiments (EXP-0.x, EXP-S1–S3, EXP-C1–C3, EXP-D1–D5, EXP-B1–B2) implemented. |
 
 ---
 
@@ -52,7 +52,7 @@
 | TASK-12 | Sequence Experiments | **COMPLETE** | Added `src/sequence_experiments.py`, CLI support in `main.py`, `tests/test_sequence_experiments.py`, refreshed smoke-compatible LSTM handling for unseen tokens, and generated `results/EXP-S1` through `results/EXP-S3`. Current sequence verdicts are mostly NEGATIVE, with WEAK evidence on `S1.4_count_symbol` and `S2.2_balanced_parens`. See [log](implementation_log/TASK-12_sequence_experiments.md) |
 | TASK-13 | Classification Experiments | **COMPLETE** | Added `src/classification_experiments.py`, CLI support in `main.py`, `tests/test_classification_experiments.py`, schema-guided categorical noise for tabular `NOISE` splits, and generated `results/EXP-C1` through `results/EXP-C3`. Current classification verdicts are mostly MODERATE across the implemented C1-C3 tasks, with `C2.1_and_rule` at WEAK and `C1.6_modular_class` at INCONCLUSIVE. See [log](implementation_log/TASK-13_classification_experiments.md) |
 | TASK-14 | Diagnostic Experiments | **COMPLETE** | Added `src/diagnostic_experiments.py`, CLI support in `main.py`, `tests/test_diagnostic_experiments.py` (21 tests), `InputEncoder.feature_names` and `SklearnModelWrapper.estimator` properties. EXP-D1 through EXP-D5 runners implemented: sample-efficiency learning curves, distractor robustness, noise robustness, feature-importance alignment (permutation importance), and solvability verdict calibration combining baseline + diagnostic evidence. See [log](implementation_log/TASK-14_diagnostic_experiments.md) |
-| TASK-15 | Bonus: Algorithm Discovery | NOT STARTED | Depends on TASK-14 |
+| TASK-15 | Bonus: Algorithm Discovery | **COMPLETE** | Added `src/bonus_experiments.py`, CLI support in `main.py`, `tests/test_bonus_experiments.py` (20 tests). EXP-B1 extracts decision tree rules from classification models and evaluates functional equivalence on hard test sets. EXP-B2 searches over SR-10 DSL programs for sequence tasks using the reference algorithm as oracle. See [log](implementation_log/TASK-15_bonus_algorithm_discovery.md) |
 
 **Milestone Gates:**
 - `[x]` FOUNDATION complete (TASK-01-04 done + V-1, V-2, V-9, V-10 passing)
@@ -62,6 +62,7 @@
 - `[x]` SEQUENCE BASELINE SUITE complete (TASK-12 done for implemented S1-S3 tiers + `results/EXP-S1` through `results/EXP-S3`)
 - `[x]` CLASSIFICATION BASELINE SUITE complete (TASK-13 done for implemented C1-C3 tiers + `results/EXP-C1` through `results/EXP-C3`)
 - `[x]` DIAGNOSTIC SUITE complete (TASK-14 done for EXP-D1 through EXP-D5 + 21 tests passing)
+- `[x]` BONUS ALGORITHM DISCOVERY complete (TASK-15 done for EXP-B1 + EXP-B2 + 20 tests passing)
 
 ---
 
@@ -103,6 +104,7 @@ DataScience/
 |   |-- sequence_experiments.py       # TASK-12 sequence experiment specs + runners
 |   |-- classification_experiments.py # TASK-13 classification experiment specs + runners
 |   |-- diagnostic_experiments.py     # TASK-14 diagnostic experiment specs + runners
+|   |-- bonus_experiments.py          # TASK-15 bonus algorithm discovery runners
 |   |-- dsl/
 |   |   |-- __init__.py
 |   |   |-- classification_dsl.py     # SR-9 built
@@ -110,7 +112,7 @@ DataScience/
 |   `-- models/
 |       |-- __init__.py
 |       `-- harness.py                # SR-5 built (9 families)
-|-- tests/                            # Validation suite (418 tests total)
+|-- tests/                            # Validation suite (457 tests total)
 |   |-- __init__.py
 |   |-- test_schemas.py               # V-2: 54 tests
 |   |-- test_classification_dsl.py    # V-9: 58 tests
@@ -125,7 +127,8 @@ DataScience/
 |   |-- test_smoke_tests.py           # V-G1..V-G4: 7 tests
 |   |-- test_sequence_experiments.py  # TASK-12 sequence experiment coverage
 |   |-- test_classification_experiments.py # TASK-13 classification experiment coverage
-|   `-- test_diagnostic_experiments.py    # TASK-14 diagnostic experiment coverage (21 tests)
+|   |-- test_diagnostic_experiments.py    # TASK-14 diagnostic experiment coverage (21 tests)
+|   `-- test_bonus_experiments.py         # TASK-15 bonus experiment coverage (20 tests)
 |-- results/
 |-- conftest.py
 |-- requirements.txt
@@ -151,6 +154,8 @@ DataScience/
 - **DEV-013:** TASK-13 classification runs use the currently validated model families (`majority_class`, `logistic_regression`, `decision_tree`, `random_forest`, `gradient_boosted_trees`, `mlp`) and the available OOD splits (`value_extrapolation`, `noise`) instead of the catalog's broader split/architecture matrix.
 - **DEV-014:** TASK-14 selects D1 task/model pairings from existing baseline artifacts rather than requiring a live Phase 2/3 rerun. D2 uses `_clone_task_with_distractors` to inject schema-aware distractor features at the task level. D3 noise robustness runs classification tasks only (numeric Gaussian noise). D4 feature-importance alignment uses `sklearn.inspection.permutation_importance`. D5 calibration combines baseline evidence with D1-D4 diagnostic signals and uses a refined `_calibrated_label` function.
 - **DEV-015:** `np.trapz` replaced with `np.trapezoid` (NumPy 2.0+ compat) in `_curve_auc`.
+- **DEV-016:** TASK-15 selects classification tasks with MODERATE or better verdicts for EXP-B1 rule extraction (spec says STRONG, but current suite peaks at MODERATE). EXP-B2 searches all implemented S1/S3 sequence tasks rather than limiting to S5-tier STRONG tasks (S5 is deferred). Random DSL program search replaces model-guided search since the reference algorithm itself is used as the oracle.
+- **DEV-017:** TASK-15 uses `InputEncoder` + `DecisionTreeClassifier` directly for EXP-B1 rather than going through the full `ModelHarness.run()` pipeline, to access the fitted tree structure for rule extraction and structural comparison.
 
 See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 
