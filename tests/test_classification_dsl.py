@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 
 from src.dsl.classification_dsl import (
+    AggregateClassifier,
     And,
     Between,
     CountAggregator,
@@ -37,6 +38,7 @@ from src.dsl.classification_dsl import (
     Or,
     Xor,
     evaluate_rule,
+    sample_predicate,
     sample_rule,
     verify_coverage,
 )
@@ -535,6 +537,21 @@ class TestAggregators:
         assert CountAggregator(predicate=Gt(feature="x", threshold=5.0)).features_used() == {"x"}
         assert MaxAggregator(feature="x").features_used() == {"x"}
 
+    def test_aggregate_classifier_requires_group_evaluation(self):
+        clf = AggregateClassifier(
+            aggregator=MeanAggregator(feature="x"),
+            virtual_feature_name="mean_x",
+            inner_classifier=IfThenElse(
+                predicate=Gt(feature="mean_x", threshold=10.0),
+                class_if_true="HIGH",
+                class_if_false="LOW",
+            ),
+            group_key="group_id",
+        )
+        assert clf.evaluate_group([{"x": 5.0}, {"x": 15.0}]) == "LOW"
+        with pytest.raises(RuntimeError, match="evaluate_group"):
+            clf.evaluate({"mean_x": 10.0})
+
 
 # ===================================================================
 # 9. Rule Sampler Tests
@@ -549,14 +566,13 @@ class TestRuleSampler:
         for row in rows:
             assert r1.evaluate(row) == r2.evaluate(row)
 
-    def test_sample_rule_different_seeds_differ(self, simple_schema: TabularInputSchema):
-        r1 = sample_rule(simple_schema, seed=42, n_classes=2, max_depth=2)
-        r2 = sample_rule(simple_schema, seed=43, n_classes=2, max_depth=2)
-        rows = simple_schema.sample_batch(seed=99, n=200)
-        labels1 = [r1.evaluate(row) for row in rows]
-        labels2 = [r2.evaluate(row) for row in rows]
-        # Very unlikely to be identical for different seeds
-        assert labels1 != labels2
+    def test_sample_rule_different_seeds_usually_change_structure(self, simple_schema: TabularInputSchema):
+        rules = [sample_rule(simple_schema, seed=seed, n_classes=3, max_depth=3) for seed in range(10)]
+        signatures = {
+            (type(rule).__name__, rule.depth(), tuple(sorted(rule.features_used())), tuple(sorted(rule.classes())))
+            for rule in rules
+        }
+        assert len(signatures) >= 2
 
     def test_sample_rule_classes(self, simple_schema: TabularInputSchema):
         for seed in range(10):
@@ -583,7 +599,12 @@ class TestRuleSampler:
         """Generate 50 random rules and verify they all work."""
         for seed in range(50):
             for depth in [1, 2, 3, 4]:
+                if depth == 1:
+                    with pytest.raises(ValueError, match="max_depth must be >= 2"):
+                        sample_rule(simple_schema, seed=seed, n_classes=3, max_depth=depth)
+                    continue
                 clf = sample_rule(simple_schema, seed=seed, n_classes=3, max_depth=depth)
+                assert clf.depth() <= depth
                 rows = simple_schema.sample_batch(seed=seed + 1000, n=50)
                 for row in rows:
                     label = clf.evaluate(row)
@@ -594,3 +615,19 @@ class TestRuleSampler:
         for seed in range(10):
             clf = sample_rule(numeric_only_schema, seed=seed, n_classes=2, max_depth=2)
             assert verify_coverage(clf, numeric_only_schema, n_samples=100, seed=seed)
+
+    def test_sample_predicate_respects_max_depth(self, simple_schema: TabularInputSchema):
+        rng = np.random.default_rng(42)
+        for max_depth in [1, 2, 3, 4]:
+            pred = sample_predicate(simple_schema, rng, max_depth=max_depth)
+            assert pred.depth() <= max_depth
+
+    def test_sample_rule_respects_allowed_features(self, simple_schema: TabularInputSchema):
+        clf = sample_rule(
+            simple_schema,
+            seed=42,
+            n_classes=2,
+            max_depth=3,
+            allowed_features=["x"],
+        )
+        assert clf.features_used() == {"x"}

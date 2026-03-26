@@ -442,10 +442,9 @@ class TestErrorTaxonomy:
         pred = ["A", "UNKNOWN"]
         report = evaluate(pred, gt, task, "test")
 
-        # "UNKNOWN" is not in the label set derived from gt ∪ pred,
-        # but since it's in pred, it becomes a known label.
-        # It should still count as wrong_class since it's in the label set.
         assert report.error_taxonomy["correct"] == 1
+        assert report.error_taxonomy["unknown_class"] == 1
+        assert report.error_taxonomy["wrong_class"] == 0
 
     def test_sequence_off_by_one(self):
         task = _make_sequence_task()
@@ -538,6 +537,18 @@ class TestMetadataConditioned:
         task = _make_classification_task()
         report = evaluate(["A"], ["A"], task, "test")
         assert report.metadata_conditioned_metrics == {}
+
+    def test_metadata_length_mismatch_raises(self):
+        task = _make_classification_task()
+        with pytest.raises(ValueError, match="metadata length"):
+            evaluate(
+                ["A", "B"],
+                ["A", "B"],
+                task,
+                "test",
+                metadata=[{"tier": "easy"}],
+                condition_keys=["tier"],
+            )
 
 
 # ===================================================================

@@ -16,6 +16,7 @@ Validated by: V-4 (Split Generator Validation).
 
 from __future__ import annotations
 
+import numbers
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
@@ -187,12 +188,18 @@ class SplitGenerator:
             SplitResult with value-based split.
         """
         lo, hi = train_range
+        if not isinstance(lo, numbers.Real) or not isinstance(hi, numbers.Real):
+            raise ValueError(
+                f"train_range must contain numeric bounds, got {train_range}"
+            )
+        if lo > hi:
+            raise ValueError(f"train_range lower bound ({lo}) > upper bound ({hi})")
         train, test = [], []
 
         for s in dataset.samples:
             if isinstance(s.input_data, dict):
                 val = s.input_data.get(feature_name)
-                if val is not None and isinstance(val, (int, float)):
+                if val is not None and isinstance(val, numbers.Real):
                     if lo <= val <= hi:
                         train.append(s)
                     else:
@@ -200,7 +207,9 @@ class SplitGenerator:
                 else:
                     train.append(s)  # non-numeric features go to train
             elif isinstance(s.input_data, list):
-                if all(lo <= x <= hi for x in s.input_data):
+                if any(not isinstance(x, numbers.Real) for x in s.input_data):
+                    test.append(s)
+                elif all(lo <= x <= hi for x in s.input_data):
                     train.append(s)
                 else:
                     test.append(s)
@@ -240,6 +249,10 @@ class SplitGenerator:
         Returns:
             SplitResult with noisy test inputs.
         """
+        if not 0.0 <= test_noise_level <= 1.0:
+            raise ValueError(
+                f"test_noise_level must be in [0, 1], got {test_noise_level}"
+            )
         base_split = self.split_iid(dataset, train_fraction, seed)
 
         rng = np.random.default_rng(seed + 2**30)

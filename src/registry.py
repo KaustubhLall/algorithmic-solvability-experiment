@@ -9,6 +9,7 @@ Validated by: V-1 (Task Registry Validation).
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
@@ -112,6 +113,13 @@ def classification_verifier(prediction: Any, expected: Any) -> bool:
     return str(prediction) == str(expected)
 
 
+def _stable_hash_int(parts: Sequence[Any]) -> int:
+    """Return a reproducible 32-bit hash for arbitrary structured values."""
+    joined = "||".join(repr(part) for part in parts)
+    digest = hashlib.sha256(joined.encode("utf-8")).digest()
+    return int.from_bytes(digest[:4], byteorder="big", signed=False)
+
+
 # ===================================================================
 # Task builders: Sequence Track
 # ===================================================================
@@ -137,7 +145,7 @@ def _build_s0_tasks() -> List[TaskSpec]:
     schema = _seq_schema()
     def s0_1_ref(inp: List[int]) -> List[int]:
         # Deterministic but unrelated to input structure
-        h = hash(tuple(inp)) % (2**32)
+        h = _stable_hash_int(inp)
         rng = np.random.default_rng(h)
         return [int(x) for x in rng.integers(0, 10, size=len(inp))]
     tasks.append(TaskSpec(
@@ -436,7 +444,7 @@ def _build_c0_tasks() -> List[TaskSpec]:
 
     # C0.1 Random class
     def c0_1_ref(row: Dict[str, Any]) -> str:
-        h = hash(frozenset(sorted((k, str(v)) for k, v in row.items()))) % (2**32)
+        h = _stable_hash_int(sorted((k, str(v)) for k, v in row.items()))
         return ["A", "B", "C"][h % 3]
     tasks.append(TaskSpec(
         task_id="C0.1_random_class", tier="C0", track="classification",

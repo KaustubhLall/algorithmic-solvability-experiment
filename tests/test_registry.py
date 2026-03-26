@@ -20,6 +20,7 @@ import pytest
 from src.registry import (
     TaskRegistry,
     TaskSpec,
+    _stable_hash_int,
     build_default_registry,
     exact_match_verifier,
     classification_verifier,
@@ -345,3 +346,7 @@ class TestReproducibility:
             out1 = task.reference_algorithm(inp1)
             out2 = task.reference_algorithm(inp2)
             assert out1 == out2, f"{task.task_id} end-to-end not reproducible"
+
+    def test_stable_hash_helper_is_deterministic(self):
+        value = [("x1", "1.5"), ("cat1", "A")]
+        assert _stable_hash_int(value) == _stable_hash_int(value)
