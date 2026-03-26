@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2025-03-25 (TASK-08 complete)
+> **Last Updated:** 2026-03-25 (TASK-09 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -248,3 +248,18 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 — separate taxonomies per track.
 - **Rationale:** Classification and sequence errors have fundamentally different failure modes. Classification: wrong_class vs unknown_class. Sequence: length_mismatch vs off_by_one vs content_error. Separate taxonomies give more actionable diagnostic information for downstream analysis (EXP-D experiments).
 - **Consequences:** Consumers of error_taxonomy must check `report.track` to interpret the keys correctly. This is acceptable since track is always known from the task.
+
+---
+
+### ADR-016: Reuse one generated dataset per task and seed across split strategies
+
+- **Date:** 2026-03-25
+- **Task:** TASK-09
+- **Status:** ACCEPTED
+- **Context:** The Experiment Runner needs to compare IID, noise, length, and value-range splits for the same task/model/seed combinations. If each split re-generated its own dataset, split-to-split differences would mix together resampling variance and split difficulty.
+- **Options considered:**
+  1. Generate a fresh dataset for every `(task, seed, split)` combination
+  2. Generate one dataset per `(task, seed)` and derive all requested splits from that shared dataset
+- **Decision:** Option 2 - generate once per task/seed, then reuse that dataset across split strategies.
+- **Rationale:** This keeps split comparisons paired, reduces compute, and makes it easier to reason about differences between split strategies because the underlying examples come from the same sampled pool.
+- **Consequences:** Split-level comparisons are cleaner and more reproducible. The runner must carry split metadata forward so downstream reporting can still distinguish the evaluation conditions.
