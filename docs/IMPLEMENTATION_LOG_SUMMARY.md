@@ -5,7 +5,7 @@
 > Detailed per-task logs live in `docs/implementation_log/TASK-XX_<name>.md`.
 > Link each completed task from the table below to its detailed log.
 >
-> **Last Updated:** 2026-03-25 (TASK-09 complete, V-7 passing, full suite green)
+> **Last Updated:** 2026-03-25 (TASK-10 complete, V-8 passing, full suite green)
 > **Format:** Append entries as tasks complete. Never delete past entries.
 
 ---
@@ -31,6 +31,7 @@
 | TASK-07 | Model Harness (SR-5) | 2025-03-25 | [log](implementation_log/TASK-07_model_harness.md) | 8 model families, unified encode->train->predict->decode pipeline in `src/models/harness.py`. 33 V-5 tests pass. |
 | TASK-08 | Evaluation Engine (SR-6) | 2025-03-25 | [log](implementation_log/TASK-08_evaluation_engine.md) | Classification + sequence metric dispatch, confusion matrix, per-class P/R/F1, error taxonomy, metadata-conditioned breakdowns in `src/evaluation.py`. 52 V-6 tests pass. |
 | TASK-09 | Experiment Runner (SR-7) | 2026-03-25 | [log](implementation_log/TASK-09_experiment_runner.md) | Multi-seed experiment orchestration, aggregation, progress logging, and JSON-ready serialization in `src/runner.py`. 36 V-7 tests pass. |
+| TASK-10 | Report Generator (SR-8) | 2026-03-25 | [log](implementation_log/TASK-10_report_generator.md) | Structured experiment artifact writing, per-task metrics/errors JSON, markdown summaries, plots, and solvability verdict computation in `src/reporting.py`. 9 V-8 tests pass. |
 
 ---
 
@@ -53,6 +54,9 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 - **Error taxonomy is track-specific.** Classification errors: correct/wrong_class/unknown_class. Sequence errors: correct/length_mismatch/content_error/off_by_one. Separate taxonomies give more actionable diagnostics.
 - **Reuse one dataset per (task, seed) across split strategies.** The runner generates data once per task/seed, then derives all requested splits from that shared dataset. This keeps split comparisons paired and reduces variance from resampling.
 - **Carry execution metadata forward early.** Recording `seeds_used`, per-run `split_metadata`, and JSON-ready report serialization in SR-7 makes TASK-10 simpler because reporting can focus on file layout rather than reconstructing pipeline state.
+- **Use runner/evaluation serializers as the reporting source of truth.** `experiment_report_to_dict()`, `aggregated_result_to_dict()`, and `single_result_to_dict()` keep SR-8 from drifting away from SR-7/6 field names.
+- **Section 9.4 needs an explicit operationalization layer.** The design labels are qualitative; SR-8 now records per-criterion evidence flags and notes, using currently available SR-7 signals while leaving unavailable criteria clearly unmet instead of guessing.
+- **Per-task plots can be generated from reports alone.** Averaging stored confusion matrices and plotting aggregated accuracy by split was enough for V-8; no raw dataset replay was necessary.
 
 ---
 
@@ -60,7 +64,7 @@ Surprising findings, non-obvious edge cases, or things that would save time in f
 
 Issues actively blocking progress and needing resolution before the next task can start.
 
-_None. TASK-10 (Report Generator) is ready to start._
+_None. TASK-11 (Pipeline Smoke Tests) is ready to start._
 
 ---
 
@@ -76,8 +80,8 @@ Quick record of which validation procedures (V-1 through V-10 + V-Global) are pa
 | V-4 | Split Generator | **PASS** | 29 tests, all passing (0.12s) |
 | V-5 | Model Harness | **PASS** | 33 tests, all passing (1.00s) |
 | V-6 | Evaluation Engine | **PASS** | 52 tests, all passing (0.84s) |
-| V-7 | Experiment Runner | **PASS** | 36 tests, all passing (0.95s); full suite also passes with 370 tests |
-| V-8 | Report Generator | NOT RUN | |
+| V-7 | Experiment Runner | **PASS** | 36 tests, all passing (0.95s) |
+| V-8 | Report Generator | **PASS** | 9 tests, all passing (1.14s); full suite now passes with 395 tests |
 | V-9 | Classification Rule DSL | **PASS** | 55 tests, all passing (0.28s) |
 | V-10 | Sequence DSL | **PASS** | 56 tests, all passing (0.16s) |
 | V-G1 | Round-trip check | NOT RUN | |

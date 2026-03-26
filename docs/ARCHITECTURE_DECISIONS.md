@@ -263,3 +263,18 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 - generate once per task/seed, then reuse that dataset across split strategies.
 - **Rationale:** This keeps split comparisons paired, reduces compute, and makes it easier to reason about differences between split strategies because the underlying examples come from the same sampled pool.
 - **Consequences:** Split-level comparisons are cleaner and more reproducible. The runner must carry split metadata forward so downstream reporting can still distinguish the evaluation conditions.
+
+---
+
+### ADR-017: Operationalize solvability labels from observable reporting evidence
+
+- **Date:** 2026-03-25
+- **Task:** TASK-10
+- **Status:** ACCEPTED
+- **Context:** EXPERIMENT_DESIGN.md Section 9.4 defines `STRONG` / `MODERATE` / `WEAK` / `NEGATIVE` / `INCONCLUSIVE` in terms of evidence criteria, but SR-7 currently exposes only some of those signals directly (IID/OOD accuracy, seed stability, baseline gap, split-wise behavior). Criteria like sample efficiency and counterfactual sensitivity are not yet part of the execution pipeline.
+- **Options considered:**
+  1. Delay verdict generation until every criterion is directly measured
+  2. Implement a reporting-layer operationalization that maps available SR-7 evidence to the Section 9.4 labels and explicitly marks unavailable criteria as unmet
+- **Decision:** Option 2 - compute verdicts in SR-8 from the currently observable evidence, and record per-criterion flags plus explanatory notes in the output JSON/markdown.
+- **Rationale:** TASK-10 requires solvability verdicts now, and downstream tasks need those artifacts. Recording the evidence flags makes the approximation inspectable instead of opaque.
+- **Consequences:** Verdicts are reproducible and auditable today, but they remain bounded by the current pipeline instrumentation. Future tasks that add sample-efficiency, transfer, or counterfactual evaluations can tighten the verdict logic without changing the artifact format.
