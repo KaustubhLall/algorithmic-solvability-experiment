@@ -5,7 +5,7 @@
 > Update this document at the end of every chat session.
 >
 > **Last Updated:** 2026-03-25
-> **Current Phase:** Implementation - TASK-10 next (FOUNDATION + DATA PIPELINE milestones complete, V-7 passing)
+> **Current Phase:** Implementation - TASK-11 next (FULL PIPELINE milestone complete, V-8 passing)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | TASK-10: Report Generator |
+| **Next task to implement** | TASK-11: Pipeline Smoke Tests |
 | **Status** | NOT STARTED |
-| **Blocked by** | Nothing - TASK-09 is complete |
-| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 1 (SR-8), Part 4 (TASK-10), Part 3 (V-8) |
+| **Blocked by** | Nothing - TASK-10 is complete |
+| **Relevant spec** | `EXPERIMENT_CATALOG.md` Part 2 (EXP-0.1 to EXP-0.3), Part 3 (V-G1 to V-G4), Part 4 (TASK-11) |
 
 ---
 
@@ -47,7 +47,7 @@
 | TASK-07 | Model Harness (SR-5) | **COMPLETE** | 33 V-5 tests pass. 8 model families. See [log](implementation_log/TASK-07_model_harness.md) |
 | TASK-08 | Evaluation Engine (SR-6) | **COMPLETE** | 52 V-6 tests pass. See [log](implementation_log/TASK-08_evaluation_engine.md) |
 | TASK-09 | Experiment Runner (SR-7) | **COMPLETE** | 36 V-7 tests pass. Multi-seed orchestration, aggregation, and serialization helpers in `src/runner.py`. See [log](implementation_log/TASK-09_experiment_runner.md) |
-| TASK-10 | Report Generator (SR-8) | NOT STARTED | Depends on TASK-09 |
+| TASK-10 | Report Generator (SR-8) | **COMPLETE** | 9 V-8 tests pass. Structured artifacts, plots, markdown summaries, and solvability verdict logic in `src/reporting.py`. See [log](implementation_log/TASK-10_report_generator.md) |
 | TASK-11 | Smoke Tests (EXP-0.x) | NOT STARTED | **GATE** - depends on TASK-10 |
 | TASK-12 | Sequence Experiments | NOT STARTED | Depends on TASK-11 |
 | TASK-13 | Classification Experiments | NOT STARTED | Depends on TASK-11 |
@@ -57,7 +57,7 @@
 **Milestone Gates:**
 - `[x]` FOUNDATION complete (TASK-01-04 done + V-1, V-2, V-9, V-10 passing)
 - `[x]` DATA PIPELINE complete (TASK-05-06 done + V-3, V-4 passing)
-- `[ ]` FULL PIPELINE complete (TASK-07-10 done + V-5 through V-8 passing) - V-5, V-6, V-7 passing; V-8 not yet
+- `[x]` FULL PIPELINE complete (TASK-07-10 done + V-5 through V-8 passing)
 - `[ ]` SMOKE TEST GATE cleared (TASK-11 done + V-G1-G4 passing)
 
 ---
@@ -92,7 +92,7 @@ DataScience/
 |   |-- splits.py                     # SR-4 built (309 lines)
 |   |-- evaluation.py                 # SR-6 built (380 lines)
 |   |-- runner.py                     # SR-7 built (399 lines)
-|   |-- reporting.py                  # SR-8 planned
+|   |-- reporting.py                  # SR-8 built (520 lines)
 |   |-- dsl/
 |   |   |-- __init__.py
 |   |   |-- classification_dsl.py     # SR-9 built (735 lines)
@@ -110,7 +110,8 @@ DataScience/
 |   |-- test_splits.py                # V-4: 29 tests
 |   |-- test_model_harness.py         # V-5: 33 tests
 |   |-- test_evaluation.py            # V-6: 52 tests
-|   `-- test_runner.py                # V-7: 36 tests
+|   |-- test_runner.py                # V-7: 36 tests
+|   `-- test_reporting.py             # V-8: 9 tests
 |-- results/
 |-- conftest.py
 |-- requirements.txt
@@ -128,6 +129,7 @@ DataScience/
 - **DEV-005:** DistractorSplit defined in enum but not yet implemented.
 - **DEV-006:** Single `harness.py` instead of planned `harness.py` + `configs.py` + `encoders.py`.
 - **DEV-007:** `ExperimentSpec` uses `n_samples` + `train_fraction` rather than separate train/test sample counts.
+- **DEV-008:** Solvability verdicts are operationalized from currently available SR-7 metrics (IID/OOD accuracy, baseline gap, seed stability, robustness splits) while unavailable evidence criteria remain explicitly marked unmet.
 
 See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 

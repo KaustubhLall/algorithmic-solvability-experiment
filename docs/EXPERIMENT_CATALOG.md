@@ -1502,6 +1502,18 @@ Each entry follows this template:
 
 ---
 
+### DEV-008: Report Generator operationalizes evidence criteria from available SR-7 metrics
+
+- **Date:** 2026-03-25
+- **Task:** TASK-10 (SR-8)
+- **Type:** CRITERIA_CHANGE
+- **What changed:** EXPERIMENT_DESIGN.md Section 9.4 defines solvability labels in terms of criteria 1-9, but the implemented pipeline currently exposes only a subset of those signals directly. SR-8 therefore computes verdicts from the evidence currently available in `ExperimentReport` and records explicit per-criterion flags and explanatory notes in the output artifacts.
+- **Why:** TASK-10 requires verdict generation now, but criteria such as sample efficiency and counterfactual sensitivity are not yet measured by SR-7/TASK-11.
+- **Impact:** `solvability_verdicts.json`, `summary.md`, and per-task `metrics.json` include auditable evidence flags. Future diagnostic tasks can tighten the logic without changing the artifact locations.
+- **Resolution:** Accepted for TASK-10 and documented in ADR-017 plus the TASK-10 implementation log.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
