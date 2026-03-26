@@ -14,3 +14,5 @@ and write a detailed log in docs/implementation_log/TASK-XX_<name>.md.
 
 After carefully validating that the task is complete, make a PR to the main branch. 
 Before starting tasks, merge any existing PRs before you continue to ensure consistency.
+
+Update all respective relevant documents in docs/ before the PR.
