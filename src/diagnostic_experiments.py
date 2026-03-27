@@ -40,8 +40,8 @@ from src.splits import split_iid, split_noise
 TASK14_TRAIN_FRACTION = 0.7
 TASK14_SEEDS = [42, 123, 456, 789, 1024]
 
-TASK14_D1_SAMPLE_SIZES = [100, 500, 1000, 2000, 5000, 10000]
-TASK14_D1_TEST_SIZE = 2000
+TASK14_D1_SAMPLE_SIZES = [100, 250, 500, 1000, 2000]
+TASK14_D1_TEST_SIZE = 1000
 TASK14_D1_TASK_IDS = [
     "S1.4_count_symbol",
     "S2.2_balanced_parens",
@@ -261,6 +261,46 @@ def _run_accuracy_from_samples(
     return float(report.accuracy)
 
 
+def _build_iid_split_cache(
+    task: TaskSpec,
+    seeds: Sequence[int],
+    n_samples: int,
+    train_fraction: float,
+) -> Dict[int, Any]:
+    cache: Dict[int, Any] = {}
+    for seed in seeds:
+        dataset = generate_dataset(task, n_samples=n_samples, base_seed=seed)
+        cache[seed] = split_iid(dataset, train_fraction=train_fraction, seed=seed)
+    return cache
+
+
+def _build_noise_split_cache(
+    task: TaskSpec,
+    seeds: Sequence[int],
+    n_samples: int,
+    train_fraction: float,
+    noise_levels: Sequence[float],
+) -> Dict[float, Dict[int, Any]]:
+    dataset_by_seed = {
+        seed: generate_dataset(task, n_samples=n_samples, base_seed=seed)
+        for seed in seeds
+    }
+    schema = task.input_schema if isinstance(task.input_schema, TabularInputSchema) else None
+    return {
+        level: {
+            seed: split_noise(
+                dataset_by_seed[seed],
+                train_fraction=train_fraction,
+                test_noise_level=level,
+                seed=seed,
+                schema=schema,
+            )
+            for seed in seeds
+        }
+        for level in noise_levels
+    }
+
+
 def _build_d1_selection(
     records: Mapping[str, BaselineTaskRecord],
 ) -> List[BaselineTaskRecord]:
@@ -358,12 +398,17 @@ def run_sample_efficiency_experiment(
 
     for record in selected:
         task = active_registry.get(record.task_id)
+        split_cache = _build_iid_split_cache(
+            task,
+            active_seeds,
+            total_samples,
+            train_fraction,
+        )
         per_size: Dict[str, Dict[str, Any]] = {}
         for train_size in active_sample_sizes:
             accuracies: List[float] = []
             for seed in active_seeds:
-                dataset = generate_dataset(task, n_samples=total_samples, base_seed=seed)
-                split = split_iid(dataset, train_fraction=train_fraction, seed=seed)
+                split = split_cache[seed]
                 if split.train_size < train_size:
                     raise ValueError(
                         f"Train pool for {task.task_id} is smaller than requested size {train_size}"
@@ -597,14 +642,22 @@ def run_distractor_robustness_experiment(
 
     for task_id in active_task_ids:
         task = active_registry.get(task_id)
+        split_cache_by_count = {
+            count: _build_iid_split_cache(
+                _clone_task_with_distractors(task, count),
+                active_seeds,
+                n_samples,
+                train_fraction,
+            )
+            for count in active_counts
+        }
         by_model: Dict[str, Dict[str, Dict[str, Any]]] = {}
         for model_config in active_models:
             per_count: Dict[int, List[float]] = {count: [] for count in active_counts}
             for count in active_counts:
                 augmented_task = _clone_task_with_distractors(task, count)
                 for seed in active_seeds:
-                    dataset = generate_dataset(augmented_task, n_samples=n_samples, base_seed=seed)
-                    split = split_iid(dataset, train_fraction=train_fraction, seed=seed)
+                    split = split_cache_by_count[count][seed]
                     per_count[count].append(
                         _run_accuracy_from_samples(
                             augmented_task,
@@ -708,19 +761,19 @@ def run_noise_robustness_experiment(
 
     for task_id in active_task_ids:
         task = active_registry.get(task_id)
+        split_cache = _build_noise_split_cache(
+            task,
+            active_seeds,
+            n_samples,
+            train_fraction,
+            active_noise_levels,
+        )
         by_model: Dict[str, Dict[str, Dict[str, Any]]] = {}
         for model_config in active_models:
             per_level: Dict[float, List[float]] = {level: [] for level in active_noise_levels}
             for level in active_noise_levels:
                 for seed in active_seeds:
-                    dataset = generate_dataset(task, n_samples=n_samples, base_seed=seed)
-                    split = split_noise(
-                        dataset,
-                        train_fraction=train_fraction,
-                        test_noise_level=level,
-                        seed=seed,
-                        schema=task.input_schema if isinstance(task.input_schema, TabularInputSchema) else None,
-                    )
+                    split = split_cache[level][seed]
                     per_level[level].append(
                         _run_accuracy_from_samples(task, model_config, split.train, split.test)
                     )
@@ -905,6 +958,12 @@ def run_feature_importance_alignment_experiment(
         relevant_features = list(TASK14_RELEVANT_FEATURES[task_id])
         task_results: Dict[str, Any] = {}
         plot_payload: Dict[str, Dict[str, float]] = {}
+        split_cache = _build_iid_split_cache(
+            augmented_task,
+            active_seeds,
+            n_samples,
+            train_fraction,
+        )
 
         for model_config in active_models:
             accuracy_values: List[float] = []
@@ -912,8 +971,7 @@ def run_feature_importance_alignment_experiment(
             importances_by_feature: Dict[str, List[float]] = {}
 
             for seed in active_seeds:
-                dataset = generate_dataset(augmented_task, n_samples=n_samples, base_seed=seed)
-                split = split_iid(dataset, train_fraction=train_fraction, seed=seed)
+                split = split_cache[seed]
                 model, encoder, label_encoder = _fit_sklearn_model(
                     split.train_inputs,
                     split.train_outputs,

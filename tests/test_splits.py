@@ -206,6 +206,14 @@ class TestValueExtrapolation:
         assert [sample.seed for sample in result.train] == [0]
         assert [sample.seed for sample in result.test] == [1]
 
+    def test_tabular_missing_or_nonnumeric_feature_raises(self, categorical_match_dataset):
+        with pytest.raises(ValueError, match="must be numeric"):
+            split_value(
+                categorical_match_dataset,
+                feature_name="cat1",
+                train_range=(20.0, 80.0),
+            )
+
 
 # ===================================================================
 # 4. Noise Split

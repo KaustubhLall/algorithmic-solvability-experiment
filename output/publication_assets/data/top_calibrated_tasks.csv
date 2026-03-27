@@ -1,0 +1,11 @@
+task_id,track,tier,baseline_label,calibrated_label,baseline_score,calibrated_score,best_model,best_iid_accuracy,best_ood_accuracy,sample_efficiency_score,distractor_robustness_score
+C1.1_numeric_threshold,classification,C1,MODERATE,STRONG,0.7291,0.9291,decision_tree,1.0,1.0,1.0,1.0
+C2.3_nested_if_else,classification,C2,MODERATE,MODERATE,0.7535,0.8535,decision_tree,0.9970370370370369,1.0,1.0,0.0
+C3.3_rank_based,classification,C3,MODERATE,MODERATE,0.7466,0.8466,logistic_regression,0.9933333333333334,0.9898382597799783,1.0,0.0
+C2.6_categorical_gate,classification,C2,MODERATE,MODERATE,0.7271,0.8266,decision_tree,0.9992592592592594,1.0,0.0,0.9955
+C3.5_interaction_poly,classification,C3,MODERATE,MODERATE,0.7004,0.8001,random_forest,0.982,0.9806666666666667,0.0,0.997
+C3.1_xor,classification,C3,MODERATE,MODERATE,0.7219,0.7785,gradient_boosted_trees,0.9933333333333334,0.9990338164251208,0.0,0.5659
+C2.1_and_rule,classification,C2,WEAK,WEAK,0.67,0.77,random_forest,0.9977777777777778,1.0,0.0,1.0
+C1.2_range_binning,classification,C1,MODERATE,MODERATE,0.748,0.748,decision_tree,1.0,1.0,0.0,0.0
+S2.2_balanced_parens,sequence,S2,WEAK,WEAK,0.6465,0.7465,lstm,0.9907407407407408,0.9926574983874609,1.0,0.0
+C1.5_numeric_comparison,classification,C1,MODERATE,MODERATE,0.7242,0.7242,logistic_regression,0.9977777777777778,0.9915654615446343,0.0,0.0

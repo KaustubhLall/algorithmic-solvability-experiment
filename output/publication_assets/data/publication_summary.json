@@ -1,0 +1,448 @@
+{
+  "artifact_manifest": {
+    "all_required_results_present": true,
+    "derived_data_files": {
+      "baseline_task_results.csv": true,
+      "baseline_track_summary.csv": true,
+      "bonus_b1_rule_extraction.csv": true,
+      "bonus_b2_program_search.csv": true,
+      "bonus_summary.csv": true,
+      "calibration_overview.csv": true,
+      "calibration_transitions.csv": true,
+      "diagnostic_d1_sample_efficiency.csv": true,
+      "diagnostic_d2_distractor_robustness.csv": true,
+      "diagnostic_d3_noise_robustness.csv": true,
+      "diagnostic_d4_feature_alignment.csv": true,
+      "diagnostic_d5_calibrated_labels.csv": true,
+      "diagnostic_overview.csv": true,
+      "experiment_runtimes.csv": true,
+      "publication_checklist.md": true,
+      "publication_summary.json": true,
+      "task_inventory.csv": true,
+      "top_calibrated_tasks.csv": true
+    },
+    "derived_figure_files": {
+      "accuracy_by_track.png": true,
+      "baseline_verdict_distribution.png": true,
+      "bonus_success_rates.png": true,
+      "calibrated_label_shift.png": true,
+      "diagnostic_matrix.png": true,
+      "iid_vs_ood_accuracy.png": true,
+      "top_calibrated_scores.png": true
+    },
+    "output_root": "C:\\Users\\kaust\\PycharmProjects\\DataScience\\output\\publication_assets",
+    "results_root": "C:\\Users\\kaust\\PycharmProjects\\DataScience\\results",
+    "results_status": {
+      "baseline_experiments": {
+        "EXP-0.3": true,
+        "EXP-C1": true,
+        "EXP-C2": true,
+        "EXP-C3": true,
+        "EXP-S1": true,
+        "EXP-S2": true,
+        "EXP-S3": true
+      },
+      "bonus_experiments": {
+        "EXP-B1": true,
+        "EXP-B2": true
+      },
+      "diagnostic_experiments": {
+        "EXP-D1": true,
+        "EXP-D2": true,
+        "EXP-D3": true,
+        "EXP-D4": true,
+        "EXP-D5": true
+      }
+    },
+    "runtime_coverage": {
+      "available": 9,
+      "missing_experiments": [
+        "EXP-D1",
+        "EXP-D2",
+        "EXP-D3",
+        "EXP-D4",
+        "EXP-D5",
+        "EXP-B1",
+        "EXP-B2"
+      ],
+      "total": 16
+    }
+  },
+  "baseline_track_summary_rows": [
+    {
+      "inconclusive": 2,
+      "mean_best_iid_accuracy": 0.3195,
+      "mean_best_ood_accuracy": 0.2135,
+      "mean_score": 0.3359,
+      "moderate": 0,
+      "negative": 12,
+      "strong": 0,
+      "task_count": 16,
+      "track": "sequence",
+      "weak": 2
+    },
+    {
+      "inconclusive": 1,
+      "mean_best_iid_accuracy": 0.9355,
+      "mean_best_ood_accuracy": 0.9702,
+      "mean_score": 0.6753,
+      "moderate": 11,
+      "negative": 1,
+      "strong": 0,
+      "task_count": 14,
+      "track": "classification",
+      "weak": 1
+    }
+  ],
+  "bonus_summary_rows": [
+    {
+      "experiment_id": "EXP-B1",
+      "pass_rate": 0.75,
+      "tasks_evaluated": 12,
+      "tasks_passing": 9
+    },
+    {
+      "experiment_id": "EXP-B2",
+      "pass_rate": 0.7778,
+      "tasks_evaluated": 9,
+      "tasks_passing": 7
+    }
+  ],
+  "calibration_overview_rows": [
+    {
+      "controls_negative_or_weak": true,
+      "downgrades": 0,
+      "task_count": 30,
+      "track": "all",
+      "trivial_tasks_strong": true,
+      "unchanged": 29,
+      "upgrades": 1
+    },
+    {
+      "controls_negative_or_weak": "",
+      "downgrades": 0,
+      "task_count": 16,
+      "track": "sequence",
+      "trivial_tasks_strong": "",
+      "unchanged": 16,
+      "upgrades": 0
+    },
+    {
+      "controls_negative_or_weak": "",
+      "downgrades": 0,
+      "task_count": 14,
+      "track": "classification",
+      "trivial_tasks_strong": "",
+      "unchanged": 13,
+      "upgrades": 1
+    }
+  ],
+  "diagnostic_overview_rows": [
+    {
+      "diagnostic_id": "EXP-D1",
+      "evaluated": 8,
+      "note": "Criterion 8 pass rate across algorithmic tasks and controls.",
+      "positive_outcomes": 6,
+      "rate": 0.75,
+      "unit": "tasks"
+    },
+    {
+      "diagnostic_id": "EXP-D2",
+      "evaluated": 5,
+      "note": "Distractor-robust tasks among the D2 subset.",
+      "positive_outcomes": 4,
+      "rate": 0.8,
+      "unit": "tasks"
+    },
+    {
+      "diagnostic_id": "EXP-D3",
+      "evaluated": 4,
+      "note": "Tasks with smooth accuracy degradation under noise.",
+      "positive_outcomes": 4,
+      "rate": 1.0,
+      "unit": "tasks"
+    },
+    {
+      "diagnostic_id": "EXP-D4",
+      "evaluated": 9,
+      "note": "Feature-alignment evaluations with precision@k effectively equal to 1.0.",
+      "positive_outcomes": 9,
+      "rate": 1.0,
+      "unit": "task_model_pairs"
+    },
+    {
+      "diagnostic_id": "EXP-D5",
+      "evaluated": 30,
+      "note": "Share of tasks whose label changed after diagnostic calibration.",
+      "positive_outcomes": 1,
+      "rate": 0.0333,
+      "unit": "tasks"
+    }
+  ],
+  "runtime_rows": [
+    {
+      "experiment_id": "EXP-0.1",
+      "runtime_available": true,
+      "runtime_seconds": 53.7964
+    },
+    {
+      "experiment_id": "EXP-0.2",
+      "runtime_available": true,
+      "runtime_seconds": 5.0321
+    },
+    {
+      "experiment_id": "EXP-0.3",
+      "runtime_available": true,
+      "runtime_seconds": 8.4845
+    },
+    {
+      "experiment_id": "EXP-S1",
+      "runtime_available": true,
+      "runtime_seconds": 98.3893
+    },
+    {
+      "experiment_id": "EXP-S2",
+      "runtime_available": true,
+      "runtime_seconds": 47.0105
+    },
+    {
+      "experiment_id": "EXP-S3",
+      "runtime_available": true,
+      "runtime_seconds": 27.2963
+    },
+    {
+      "experiment_id": "EXP-C1",
+      "runtime_available": true,
+      "runtime_seconds": 47.4632
+    },
+    {
+      "experiment_id": "EXP-C2",
+      "runtime_available": true,
+      "runtime_seconds": 65.6656
+    },
+    {
+      "experiment_id": "EXP-C3",
+      "runtime_available": true,
+      "runtime_seconds": 41.1785
+    },
+    {
+      "experiment_id": "EXP-D1",
+      "runtime_available": false,
+      "runtime_seconds": null
+    },
+    {
+      "experiment_id": "EXP-D2",
+      "runtime_available": false,
+      "runtime_seconds": null
+    },
+    {
+      "experiment_id": "EXP-D3",
+      "runtime_available": false,
+      "runtime_seconds": null
+    },
+    {
+      "experiment_id": "EXP-D4",
+      "runtime_available": false,
+      "runtime_seconds": null
+    },
+    {
+      "experiment_id": "EXP-D5",
+      "runtime_available": false,
+      "runtime_seconds": null
+    },
+    {
+      "experiment_id": "EXP-B1",
+      "runtime_available": false,
+      "runtime_seconds": null
+    },
+    {
+      "experiment_id": "EXP-B2",
+      "runtime_available": false,
+      "runtime_seconds": null
+    }
+  ],
+  "task_inventory_rows": [
+    {
+      "task_count": 1,
+      "tier": "S0",
+      "track": "sequence"
+    },
+    {
+      "task_count": 8,
+      "tier": "S1",
+      "track": "sequence"
+    },
+    {
+      "task_count": 4,
+      "tier": "S2",
+      "track": "sequence"
+    },
+    {
+      "task_count": 3,
+      "tier": "S3",
+      "track": "sequence"
+    },
+    {
+      "task_count": 1,
+      "tier": "C0",
+      "track": "classification"
+    },
+    {
+      "task_count": 5,
+      "tier": "C1",
+      "track": "classification"
+    },
+    {
+      "task_count": 5,
+      "tier": "C2",
+      "track": "classification"
+    },
+    {
+      "task_count": 3,
+      "tier": "C3",
+      "track": "classification"
+    }
+  ],
+  "top_calibrated_tasks": [
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.7291,
+      "best_iid_accuracy": 1.0,
+      "best_model": "decision_tree",
+      "best_ood_accuracy": 1.0,
+      "calibrated_label": "STRONG",
+      "calibrated_score": 0.9291,
+      "distractor_robustness_score": 1.0,
+      "sample_efficiency_score": 1.0,
+      "task_id": "C1.1_numeric_threshold",
+      "tier": "C1",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.7535,
+      "best_iid_accuracy": 0.9970370370370369,
+      "best_model": "decision_tree",
+      "best_ood_accuracy": 1.0,
+      "calibrated_label": "MODERATE",
+      "calibrated_score": 0.8535,
+      "distractor_robustness_score": 0.0,
+      "sample_efficiency_score": 1.0,
+      "task_id": "C2.3_nested_if_else",
+      "tier": "C2",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.7466,
+      "best_iid_accuracy": 0.9933333333333334,
+      "best_model": "logistic_regression",
+      "best_ood_accuracy": 0.9898382597799783,
+      "calibrated_label": "MODERATE",
+      "calibrated_score": 0.8466,
+      "distractor_robustness_score": 0.0,
+      "sample_efficiency_score": 1.0,
+      "task_id": "C3.3_rank_based",
+      "tier": "C3",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.7271,
+      "best_iid_accuracy": 0.9992592592592594,
+      "best_model": "decision_tree",
+      "best_ood_accuracy": 1.0,
+      "calibrated_label": "MODERATE",
+      "calibrated_score": 0.8266,
+      "distractor_robustness_score": 0.9955,
+      "sample_efficiency_score": 0.0,
+      "task_id": "C2.6_categorical_gate",
+      "tier": "C2",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.7004,
+      "best_iid_accuracy": 0.982,
+      "best_model": "random_forest",
+      "best_ood_accuracy": 0.9806666666666667,
+      "calibrated_label": "MODERATE",
+      "calibrated_score": 0.8001,
+      "distractor_robustness_score": 0.997,
+      "sample_efficiency_score": 0.0,
+      "task_id": "C3.5_interaction_poly",
+      "tier": "C3",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.7219,
+      "best_iid_accuracy": 0.9933333333333334,
+      "best_model": "gradient_boosted_trees",
+      "best_ood_accuracy": 0.9990338164251208,
+      "calibrated_label": "MODERATE",
+      "calibrated_score": 0.7785,
+      "distractor_robustness_score": 0.5659,
+      "sample_efficiency_score": 0.0,
+      "task_id": "C3.1_xor",
+      "tier": "C3",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "WEAK",
+      "baseline_score": 0.67,
+      "best_iid_accuracy": 0.9977777777777778,
+      "best_model": "random_forest",
+      "best_ood_accuracy": 1.0,
+      "calibrated_label": "WEAK",
+      "calibrated_score": 0.77,
+      "distractor_robustness_score": 1.0,
+      "sample_efficiency_score": 0.0,
+      "task_id": "C2.1_and_rule",
+      "tier": "C2",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.748,
+      "best_iid_accuracy": 1.0,
+      "best_model": "decision_tree",
+      "best_ood_accuracy": 1.0,
+      "calibrated_label": "MODERATE",
+      "calibrated_score": 0.748,
+      "distractor_robustness_score": 0.0,
+      "sample_efficiency_score": 0.0,
+      "task_id": "C1.2_range_binning",
+      "tier": "C1",
+      "track": "classification"
+    },
+    {
+      "baseline_label": "WEAK",
+      "baseline_score": 0.6465,
+      "best_iid_accuracy": 0.9907407407407408,
+      "best_model": "lstm",
+      "best_ood_accuracy": 0.9926574983874609,
+      "calibrated_label": "WEAK",
+      "calibrated_score": 0.7465,
+      "distractor_robustness_score": 0.0,
+      "sample_efficiency_score": 1.0,
+      "task_id": "S2.2_balanced_parens",
+      "tier": "S2",
+      "track": "sequence"
+    },
+    {
+      "baseline_label": "MODERATE",
+      "baseline_score": 0.7242,
+      "best_iid_accuracy": 0.9977777777777778,
+      "best_model": "logistic_regression",
+      "best_ood_accuracy": 0.9915654615446343,
+      "calibrated_label": "MODERATE",
+      "calibrated_score": 0.7242,
+      "distractor_robustness_score": 0.0,
+      "sample_efficiency_score": 0.0,
+      "task_id": "C1.5_numeric_comparison",
+      "tier": "C1",
+      "track": "classification"
+    }
+  ]
+}

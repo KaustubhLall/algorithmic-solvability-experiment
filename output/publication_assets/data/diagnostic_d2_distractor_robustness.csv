@@ -1,0 +1,6 @@
+task_id,selected_model,baseline_accuracy,max_distractor_accuracy,accuracy_drop,distractor_robustness_score,criterion_7_distractor_robustness
+C1.1_numeric_threshold,decision_tree,1.0,1.0,0.0,1.0,True
+C2.1_and_rule,decision_tree,0.997,0.997,0.0,1.0,True
+C2.6_categorical_gate,decision_tree,0.9993,0.9948,0.0045,0.9955,True
+C3.1_xor,decision_tree,0.9919,0.5578,0.4341,0.5659,False
+C3.5_interaction_poly,gradient_boosted_trees,0.9741,0.9711,0.003,0.997,True

@@ -50,6 +50,8 @@ class SolvabilityVerdict:
     label: str
     score: float
     best_model: Optional[str]
+    best_iid_model: Optional[str]
+    best_ood_model: Optional[str]
     best_iid_accuracy: Optional[float]
     best_ood_accuracy: Optional[float]
     evidence: Dict[str, bool]
@@ -318,7 +320,9 @@ def compute_solvability_verdict(
         task_id=task.task_id,
         label=label,
         score=score,
-        best_model=best_overall.model_name if best_overall else None,
+        best_model=best_iid.model_name if best_iid else (best_overall.model_name if best_overall else None),
+        best_iid_model=best_iid.model_name if best_iid else None,
+        best_ood_model=best_ood.model_name if best_ood else None,
         best_iid_accuracy=best_iid.accuracy_mean if best_iid else None,
         best_ood_accuracy=best_ood.accuracy_mean if best_ood else None,
         evidence=evidence,
@@ -348,6 +352,8 @@ def compute_solvability_verdicts(
             "label": verdict.label,
             "score": verdict.score,
             "best_model": verdict.best_model,
+            "best_iid_model": verdict.best_iid_model,
+            "best_ood_model": verdict.best_ood_model,
             "best_iid_accuracy": verdict.best_iid_accuracy,
             "best_ood_accuracy": verdict.best_ood_accuracy,
             "evidence": verdict.evidence,
@@ -601,6 +607,10 @@ def _render_summary_markdown(
         lines.append(f"- Score: {verdict['score']:.4f}")
         if verdict["best_model"] is not None:
             lines.append(f"- Best model: {verdict['best_model']}")
+        if verdict.get("best_iid_model") is not None:
+            lines.append(f"- Best IID model: {verdict['best_iid_model']}")
+        if verdict.get("best_ood_model") is not None:
+            lines.append(f"- Best OOD model: {verdict['best_ood_model']}")
         if verdict["best_iid_accuracy"] is not None:
             lines.append(f"- Best IID accuracy: {verdict['best_iid_accuracy']:.4f}")
         if verdict["best_ood_accuracy"] is not None:

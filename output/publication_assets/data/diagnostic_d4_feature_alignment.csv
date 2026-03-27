@@ -1,0 +1,10 @@
+task_id,model_name,precision_at_k_mean,jaccard_at_k_mean,mean_relevant_rank,accuracy_mean
+C2.1_and_rule,decision_tree,1.0,1.0,1.5,0.997
+C2.1_and_rule,gradient_boosted_trees,1.0,1.0,1.5,0.997
+C2.1_and_rule,mlp,1.0,1.0,1.5,0.9415
+C2.6_categorical_gate,decision_tree,1.0,1.0,1.5,0.9978
+C2.6_categorical_gate,gradient_boosted_trees,1.0,1.0,1.5,0.9993
+C2.6_categorical_gate,mlp,1.0,1.0,1.5,0.9341
+C3.1_xor,decision_tree,1.0,1.0,1.5,0.9704
+C3.1_xor,gradient_boosted_trees,1.0,1.0,1.5,0.9926
+C3.1_xor,mlp,1.0,1.0,1.5,0.8459

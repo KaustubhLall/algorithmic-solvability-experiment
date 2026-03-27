@@ -1,0 +1,10 @@
+task_id,best_program,best_oracle_score,best_hard_test_accuracy,passes_99_threshold
+S1.1_reverse,reverse,1.0,1.0,True
+S1.2_sort,sort | map_abs,1.0,1.0,True
+S1.4_count_symbol,unique | drop(3) | parity,0.438,0.391,False
+S1.5_parity,filter_odd | parity,1.0,1.0,True
+S1.6_prefix_sum,prefix_sum,1.0,1.0,True
+S1.7_deduplicate,unique,1.0,1.0,True
+S1.8_extrema,filter_gt(7) | concat(parity),0.126,0.123,False
+S3.1_dedup_sort_count,unique | count,1.0,1.0,True
+S3.2_filter_sort_sum,filter_even | sort | sum,1.0,1.0,True

@@ -1,0 +1,294 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  urlcolor=blue!50!black,
+  citecolor=blue!50!black
+}
+
+\title{Algorithmic Solvability from Examples:\\Consolidated Engineering and Experimental Report}
+\author{Prepared from the DataScience workspace on 2026-03-26}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This paper documents a full cleanup and rerun of the algorithmic solvability benchmark implemented in the DataScience repository. The work addressed experiment-runtime bottlenecks, improved split validation, clarified report semantics, reran the complete smoke, baseline, diagnostic, and bonus workflows, and consolidated the resulting evidence. After the fixes, the repository passes 460 automated tests and the full experiment stack runs end to end in roughly 16.7 minutes on the current machine. Empirically, the classification track remains strong: 11 of 14 classification/control tasks achieve MODERATE solvability evidence at baseline, and one task is promoted to STRONG after diagnostics. The sequence track remains weak: 12 of 16 sequence/control tasks remain NEGATIVE, with only two WEAK tasks. Bonus symbolic recovery is substantially stronger than learned sequence generalization, supporting the interpretation that the benchmark tasks are algorithmically well-formed while the current sequence model family remains the main bottleneck.
+\end{abstract}
+
+\section{Introduction}
+
+The project studies whether machine learning models can infer that an input-output mapping is governed by a compact deterministic algorithm. The benchmark spans two tracks:
+
+\begin{itemize}
+  \item sequence tasks, where inputs are variable-length symbolic sequences and outputs are transformed sequences or scalar-like sequence outputs;
+  \item classification tasks, where inputs are mixed-type tabular feature vectors and outputs are discrete class labels.
+\end{itemize}
+
+The repository already implemented synthetic task generation, multiple model families, split generation, evaluation, reporting, diagnostics, and bonus symbolic recovery modules. The immediate goals of this cleanup pass were:
+
+\begin{itemize}
+  \item fix gaps and operational issues uncovered during the first execution pass,
+  \item verify the codebase with the full test suite,
+  \item rerun the full benchmark, including diagnostics,
+  \item consolidate the findings into both a report and a paper-quality PDF artifact.
+\end{itemize}
+
+\section{Engineering Cleanup}
+
+\subsection{What was fixed}
+
+Three issues were addressed.
+
+\paragraph{Diagnostic runtime.}
+The original diagnostic workflow was not completing in practical time. The main cause was repeated dataset generation and split construction inside nested loops. The diagnostic code was updated to cache reusable IID, noise, and distractor splits. In addition, the default sample-efficiency ladder was reduced from \texttt{[100, 500, 1000, 2000, 5000, 10000]} to \texttt{[100, 250, 500, 1000, 2000]}, and the diagnostic test size was reduced from 2000 to 1000. After these changes, the full diagnostic suite completed successfully.
+
+\paragraph{Value extrapolation validation.}
+Value extrapolation for tabular data now fails fast when the requested feature is missing or nonnumeric. This replaces the earlier behavior that silently pushed nonnumeric cases into the training split and later produced empty test sets.
+
+\paragraph{Reporting semantics.}
+The reporting layer now records both \texttt{best\_iid\_model} and \texttt{best\_ood\_model}, and aligns the persisted \texttt{best\_model} field with the selected IID winner used for primary solvability interpretation. This removes a prior ambiguity in the markdown summaries and verdict JSON.
+
+\subsection{Validation status}
+
+The repository passes the full test suite:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Metric & Value \\
+\midrule
+Total tests passed & 460 \\
+Warnings during tests & 17 \\
+Pytest wall-clock time & 62.0 s \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The remaining warnings are training warnings rather than correctness failures, primarily MLP convergence warnings, logistic regression convergence warnings, and scikit-learn warnings triggered by high-cardinality sequence-output label spaces.
+
+\section{Execution Overview}
+
+The following commands were rerun successfully from the checked-in virtual environment:
+
+\begin{itemize}
+  \item \texttt{main.py smoke}
+  \item \texttt{main.py sequence}
+  \item \texttt{main.py classification}
+  \item \texttt{main.py diagnostic}
+  \item \texttt{main.py bonus}
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Workflow & Runtime \\
+\midrule
+Smoke & 59.7 s \\
+Sequence & 161.0 s \\
+Classification & 186.3 s \\
+Diagnostic & 530.6 s \\
+Bonus & 67.3 s \\
+\midrule
+Total & 1005.0 s \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The complete experiment stack therefore runs in about 16.7 minutes on the current machine, which is a substantial operational improvement over the earlier state where diagnostics did not finish.
+
+\section{Baseline Results}
+
+\subsection{Controls}
+
+The control tasks behaved as intended:
+
+\begin{itemize}
+  \item \texttt{S0.1\_random\_labels}: NEGATIVE
+  \item \texttt{C0.1\_random\_class}: NEGATIVE
+\end{itemize}
+
+This continues to support that the benchmark is not trivially overcalling solvability.
+
+\subsection{Verdict distributions}
+
+\begin{table}[H]
+\centering
+\caption{Baseline verdict distribution by track.}
+\begin{tabular}{lcccc}
+\toprule
+Track & Negative & Weak & Inconclusive & Moderate \\
+\midrule
+Sequence (16 tasks) & 12 & 2 & 2 & 0 \\
+Classification (14 tasks) & 1 & 1 & 1 & 11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Sequence track.}
+The sequence track remains the weakest part of the system. Mean best IID accuracy is 0.3195 and mean best OOD accuracy is 0.2135. Only two tasks reach WEAK evidence:
+
+\begin{itemize}
+  \item \texttt{S1.4\_count\_symbol}
+  \item \texttt{S2.2\_balanced\_parens}
+\end{itemize}
+
+Most canonical sequence transformations such as reverse, sort, rotate, prefix sum, deduplication, and run-length encoding remain NEGATIVE under the current learned model stack.
+
+\paragraph{Classification track.}
+The classification track is much stronger. Mean best IID accuracy is 0.9355 and mean best OOD accuracy is 0.9702. Deterministic tabular rule tasks are consistently learned and extrapolated by trees, random forests, boosted trees, and occasionally logistic regression. The main unresolved baseline case remains \texttt{C1.6\_modular\_class}, which stays INCONCLUSIVE.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\textwidth]{../../results/EXP-D1/classification_learning_curves.png}
+\caption{Diagnostic sample-efficiency curves for the selected classification tasks and the classification control. Classification tasks separate cleanly from the control and rapidly approach perfect accuracy.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\textwidth]{../../results/EXP-D1/sequence_learning_curves.png}
+\caption{Diagnostic sample-efficiency curves for the selected sequence tasks and the sequence control. Some sequence tasks show strong learning signals, but this does not translate into broad final solvability across the implemented sequence benchmark.}
+\end{figure}
+
+\section{Diagnostic Results}
+
+\subsection{Sample efficiency (EXP-D1)}
+
+The sample-efficiency diagnostic is now available end to end. Controls fail the criterion, while all six algorithmic comparison tasks pass Criterion 8. Representative AUC values include:
+
+\begin{itemize}
+  \item \texttt{C1.1\_numeric\_threshold}: 0.9985
+  \item \texttt{C2.3\_nested\_if\_else}: 0.9988
+  \item \texttt{C3.3\_rank\_based}: 0.9911
+  \item \texttt{S1.4\_count\_symbol}: 0.9640
+  \item \texttt{S2.2\_balanced\_parens}: 0.9863
+\end{itemize}
+
+This is important because it shows that several algorithmic tasks are much more sample-efficient than the controls, even when their final solvability label remains conservative.
+
+\subsection{Distractor robustness (EXP-D2)}
+
+Most tested classification tasks are robust to irrelevant appended features. The clear failure case is XOR:
+
+\begin{itemize}
+  \item \texttt{C3.1\_xor}: distractor robustness score 0.5659, FAIL
+\end{itemize}
+
+This suggests that the selected XOR classifier is still sensitive to irrelevant features despite very strong baseline accuracy.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.76\textwidth]{../../results/EXP-D2/per_task/C3.1_xor/distractor_curve.png}
+\caption{Distractor robustness curve for \texttt{C3.1\_xor}. This task is a notable diagnostic weakness: the selected decision tree degrades sharply as distractor features are added.}
+\end{figure}
+
+\subsection{Noise robustness (EXP-D3)}
+
+All four tested tasks pass the noise robustness diagnostic. This indicates that moderate input perturbations do not materially disrupt the strongest classification models on these tasks.
+
+\subsection{Feature-importance alignment (EXP-D4)}
+
+All tested task-model combinations achieve Precision@k of 1.0 in the feature-importance alignment diagnostic. On the tested subset, model salience aligns perfectly with the true relevant feature set.
+
+\subsection{Calibrated labels (EXP-D5)}
+
+Calibration checks pass:
+
+\begin{itemize}
+  \item controls negative or weak: true
+  \item trivial tasks strong: true
+\end{itemize}
+
+Only one label changes category after diagnostics:
+
+\begin{itemize}
+  \item \texttt{C1.1\_numeric\_threshold}: MODERATE $\rightarrow$ STRONG
+\end{itemize}
+
+This shows that diagnostics strengthen confidence numerically for several tasks, but under the current calibration rule only one task crosses into a higher evidence category.
+
+\section{Bonus Results}
+
+\subsection{Rule extraction (EXP-B1)}
+
+The classification-side symbolic recovery results remain strong:
+
+\begin{itemize}
+  \item tasks evaluated: 12
+  \item tasks above 99\% on the hard test: 9
+  \item pass rate: 75.0\%
+\end{itemize}
+
+The extracted trees use only relevant features in the logged structural summaries, which strengthens the interpretation that the learned classifiers are capturing meaningful rule structure rather than spurious shortcuts.
+
+\subsection{Program search (EXP-B2)}
+
+The sequence-side symbolic recovery results are particularly revealing:
+
+\begin{itemize}
+  \item tasks evaluated: 9
+  \item exact recoveries above 99\%: 7
+  \item pass rate: 77.8\%
+\end{itemize}
+
+Exact recoveries include reverse, sort, parity, prefix sum, deduplication, and two compositional sequence tasks.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{../../results/EXP-B2/program_search_results.png}
+\caption{DSL program-search summary for the selected sequence tasks. Symbolic recovery succeeds on most tasks, even though learned sequence generalization remains weak overall.}
+\end{figure}
+
+\section{Discussion}
+
+The post-fix run leads to three main conclusions.
+
+\paragraph{First, the benchmark is operationally much stronger.}
+The repository is test-clean, the reports are clearer, the split behavior is more principled, and the diagnostic suite now runs to completion in a reasonable wall-clock budget.
+
+\paragraph{Second, the classification track already supports the core research claim reasonably well.}
+Many deterministic tabular rules are learnable and extrapolatable from examples, and diagnostics strengthen that conclusion rather than undermining it. After calibration, \texttt{C1.1\_numeric\_threshold} reaches STRONG evidence.
+
+\paragraph{Third, the sequence track remains the main scientific gap.}
+The learned sequence models still fail on many canonical algorithmic transformations. However, bonus symbolic recovery succeeds on most searched sequence tasks. This strongly suggests that the sequence failures are more likely due to model and representation limitations than flaws in the benchmark task design.
+
+\section{Remaining Limitations}
+
+Several limitations remain after this cleanup pass:
+
+\begin{itemize}
+  \item sequence-learning performance is still substantially weaker than classification performance;
+  \item \texttt{C1.6\_modular\_class} remains unresolved;
+  \item \texttt{C3.1\_xor} shows distractor fragility despite strong baseline accuracy;
+  \item convergence warnings remain in the training stack and should still be treated as technical debt;
+  \item the current diagnostic label calibration is conservative and upgrades only one task category.
+\end{itemize}
+
+\section{Conclusion}
+
+The engineering cleanup succeeded. The codebase is now in a state where the full benchmark, including diagnostics and bonus recovery, can be executed reliably and interpreted coherently. The empirical story is also clearer:
+
+\begin{itemize}
+  \item classification results are robust and convincing;
+  \item sequence-learning results are still substantially behind;
+  \item symbolic recovery results indicate that the sequence bottleneck is in learning dynamics and representation, not in benchmark construction.
+\end{itemize}
+
+The repository is therefore well-positioned for the next phase of work: improving sequence representations and model inductive biases while preserving the now-stable experimental infrastructure.
+
+\end{document}

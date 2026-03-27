@@ -1,0 +1,9 @@
+track,tier,task_count
+sequence,S0,1
+sequence,S1,8
+sequence,S2,4
+sequence,S3,3
+classification,C0,1
+classification,C1,5
+classification,C2,5
+classification,C3,3

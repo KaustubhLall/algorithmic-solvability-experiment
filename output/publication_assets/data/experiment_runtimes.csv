@@ -1,0 +1,17 @@
+experiment_id,runtime_seconds,runtime_available
+EXP-0.1,53.7964,True
+EXP-0.2,5.0321,True
+EXP-0.3,8.4845,True
+EXP-S1,98.3893,True
+EXP-S2,47.0105,True
+EXP-S3,27.2963,True
+EXP-C1,47.4632,True
+EXP-C2,65.6656,True
+EXP-C3,41.1785,True
+EXP-D1,,False
+EXP-D2,,False
+EXP-D3,,False
+EXP-D4,,False
+EXP-D5,,False
+EXP-B1,,False
+EXP-B2,,False

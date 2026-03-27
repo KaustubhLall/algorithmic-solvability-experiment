@@ -1,0 +1,9 @@
+task_id,track,model_name,auc,delta_vs_control_auc,sample_efficiency_score,criterion_8_sample_efficiency
+C0.1_random_class,classification,mlp,0.3365,0.0,0.0,False
+C1.1_numeric_threshold,classification,decision_tree,0.9985,0.662,1.0,True
+C2.3_nested_if_else,classification,decision_tree,0.9988,0.6623,1.0,True
+C3.3_rank_based,classification,logistic_regression,0.9911,0.6546,1.0,True
+S0.1_random_labels,sequence,mlp,0.0025,0.0,0.0,False
+S1.4_count_symbol,sequence,lstm,0.964,0.9615,1.0,True
+S2.2_balanced_parens,sequence,lstm,0.9863,0.9838,1.0,True
+S3.1_dedup_sort_count,sequence,mlp,0.4304,0.4279,0.8558,True

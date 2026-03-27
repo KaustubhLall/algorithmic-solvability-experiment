@@ -199,14 +199,21 @@ class SplitGenerator:
 
         for s in dataset.samples:
             if isinstance(s.input_data, dict):
-                val = s.input_data.get(feature_name)
-                if val is not None and isinstance(val, numbers.Real):
-                    if lo <= val <= hi:
-                        train.append(s)
-                    else:
-                        test.append(s)
+                if feature_name not in s.input_data:
+                    raise ValueError(
+                        f"Feature '{feature_name}' not present in tabular sample "
+                        "for value extrapolation"
+                    )
+                val = s.input_data[feature_name]
+                if not isinstance(val, numbers.Real):
+                    raise ValueError(
+                        f"Feature '{feature_name}' must be numeric for value extrapolation, "
+                        f"got {type(val).__name__}"
+                    )
+                if lo <= val <= hi:
+                    train.append(s)
                 else:
-                    train.append(s)  # non-numeric features go to train
+                    test.append(s)
             elif isinstance(s.input_data, list):
                 if any(not isinstance(x, numbers.Real) for x in s.input_data):
                     test.append(s)

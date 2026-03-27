@@ -1,0 +1,6 @@
+diagnostic_id,unit,evaluated,positive_outcomes,rate,note
+EXP-D1,tasks,8,6,0.75,Criterion 8 pass rate across algorithmic tasks and controls.
+EXP-D2,tasks,5,4,0.8,Distractor-robust tasks among the D2 subset.
+EXP-D3,tasks,4,4,1.0,Tasks with smooth accuracy degradation under noise.
+EXP-D4,task_model_pairs,9,9,1.0,Feature-alignment evaluations with precision@k effectively equal to 1.0.
+EXP-D5,tasks,30,1,0.0333,Share of tasks whose label changed after diagnostic calibration.

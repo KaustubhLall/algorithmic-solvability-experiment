@@ -194,6 +194,10 @@ class TestGenerateReportArtifacts:
         assert "# Experiment Summary: TEST-REPORTING" in summary
         assert "| C1.1_numeric_threshold | C1 | classification | 0.9700 (decision_tree) | 0.8800 (decision_tree) | MODERATE |" in summary
         assert metrics["verdict"]["label"] == "MODERATE"
+        assert metrics["verdict"]["best_iid_model"] == "decision_tree"
+        assert metrics["verdict"]["best_ood_model"] == "decision_tree"
+        assert "Best IID model: decision_tree" in summary
+        assert "Best OOD model: decision_tree" in summary
         assert "Best IID accuracy: 0.9700" in summary
         assert "Best OOD accuracy: 0.8800" in summary
 

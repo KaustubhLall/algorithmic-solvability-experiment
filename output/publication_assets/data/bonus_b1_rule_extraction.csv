@@ -1,0 +1,13 @@
+task_id,best_depth,best_accuracy,passes_99_threshold,uses_only_relevant,n_nodes,depth
+C1.1_numeric_threshold,2,1.0,True,True,3,1
+C1.2_range_binning,2,0.9977,True,True,5,2
+C1.3_categorical_match,2,1.0,True,True,3,1
+C1.5_numeric_comparison,,0.9808,False,True,87,8
+C2.1_and_rule,2,1.0,True,True,5,2
+C2.2_or_rule,3,0.9998,True,True,7,3
+C2.3_nested_if_else,2,0.9996,True,True,7,2
+C2.5_k_of_n,5,0.9992,True,True,15,4
+C2.6_categorical_gate,5,0.9994,True,True,15,4
+C3.1_xor,5,0.9992,True,True,19,5
+C3.3_rank_based,,0.9523,False,True,189,11
+C3.5_interaction_poly,,0.9883,False,True,61,8
