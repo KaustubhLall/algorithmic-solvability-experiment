@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2026-03-26 (TASK-13 complete)
+> **Last Updated:** 2026-03-26 (TASK-16 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -450,3 +450,19 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 — run EXP-B1 on all implemented classification tasks (C1–C3) and EXP-B2 on all implemented sequence tasks (S1, S3). This maximizes coverage and still answers the algorithm discovery question.
 - **Rationale:** The bonus objective is about testing whether rules/programs can be recovered, not about filtering by solvability verdict. Running on all tasks provides a richer picture and the solvability filtering can be applied post-hoc during analysis. This is logged as DEV-016.
 - **Consequences:** 12 classification tasks for EXP-B1, 9 sequence tasks for EXP-B2. Results include both easy (C1 tier) and hard (C3 tier) tasks, enabling analysis of recovery difficulty vs. task complexity.
+
+---
+
+### ADR-029: Anchor publication-facing claims to rerun-backed analysis and implemented scope
+
+- **Date:** 2026-03-26
+- **Task:** TASK-16
+- **Status:** ACCEPTED
+- **Context:** The methodology review and status docs drifted from the fresh rerun and compiled preprint, especially around test counts, benchmark scope, and whether any task had reached `STRONG`.
+- **Options considered:**
+  1. Update each summary document ad hoc whenever numbers change
+  2. Treat the latest rerun-backed prepublication analysis and manuscript source as the empirical source of truth, and require derivative docs to restate only implemented-scope claims
+  3. Collapse all narrative reporting into a single document
+- **Decision:** Option 2 - keep `PREPUBLICATION_ANALYSIS_2026-03-26.md` and the manuscript/source artifacts as the rerun-backed empirical anchor, and require status/review docs to stay scoped to implemented `S0-S3` and `C0-C3` results unless a future task expands the benchmark.
+- **Rationale:** This reduces documentation drift, makes publication claims auditable, and prevents roadmap language from being mistaken for executed evidence.
+- **Consequences:** Follow-on tasks should update the rerun-backed analysis first, then propagate any resulting claim changes into `PROJECT_STATUS.md`, `IMPLEMENTATION_LOG_SUMMARY.md`, and the methodology/paper docs.

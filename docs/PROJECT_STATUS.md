@@ -4,8 +4,8 @@
 > Read this first, then follow the links to detailed documents.
 > Update this document at the end of every chat session.
 >
-> **Last Updated:** 2026-03-26
-> **Current Phase:** Implementation complete — all 15 tasks done (bonus algorithm discovery landed)
+> **Last Updated:** 2026-03-26 (TASK-16 complete)
+> **Current Phase:** Post-implementation review and methodology planning complete; execution follow-up queued
 
 ---
 
@@ -19,7 +19,7 @@
 
 **Two authoritative design documents:**
 - `docs/EXPERIMENT_DESIGN.md` - *what* to build and *why* (task tiers, models, metrics, evidence criteria)
-- `docs/EXPERIMENT_CATALOG.md` - *how* to build it (shared resources SR-1-10, experiments, validation V-1-10, execution plan TASK-01-15, deviation log)
+- `docs/EXPERIMENT_CATALOG.md` - *how* to build it (shared resources SR-1-10, experiments, validation V-1-10, execution plan TASK-01-16, deviation log)
 
 ---
 
@@ -27,10 +27,10 @@
 
 | Field | Value |
 |---|---|
-| **Next task to implement** | All 15 tasks complete. Project implementation finished. |
-| **Status** | DONE |
-| **Blocked by** | Nothing |
-| **Relevant spec** | All experiments (EXP-0.x, EXP-S1–S3, EXP-C1–C3, EXP-D1–D5, EXP-B1–B2) implemented. |
+| **Next task to implement** | TASK-17 - Methodology Feedback Execution (Phase 1 follow-up from TASK-16) |
+| **Status** | READY |
+| **Blocked by** | Nothing; TASK-16 planning artifacts and documentation alignment are complete |
+| **Relevant spec** | `docs/METHODOLOGY_SYSTEMATIC_REVIEW_2026-03-26.md`, `docs/PREPUBLICATION_ANALYSIS_2026-03-26.md`, the compiled preprint, and the TASK-16 implementation log |
 
 ---
 
@@ -51,8 +51,9 @@
 | TASK-11 | Smoke Tests (EXP-0.x) | **COMPLETE** | **GATE CLEARED.** `src/smoke_tests.py`, `main.py`, 7 V-Global tests, and `results/EXP-0.1` through `results/EXP-0.3` artifacts. LSTM reaches 90.5% exact match on bounded sort; C1.1 smoke is MODERATE with perfect tree/logistic accuracy; control tasks are NEGATIVE. See [log](implementation_log/TASK-11_smoke_tests.md) |
 | TASK-12 | Sequence Experiments | **COMPLETE** | Added `src/sequence_experiments.py`, CLI support in `main.py`, `tests/test_sequence_experiments.py`, refreshed smoke-compatible LSTM handling for unseen tokens, and generated `results/EXP-S1` through `results/EXP-S3`. Current sequence verdicts are mostly NEGATIVE, with WEAK evidence on `S1.4_count_symbol` and `S2.2_balanced_parens`. See [log](implementation_log/TASK-12_sequence_experiments.md) |
 | TASK-13 | Classification Experiments | **COMPLETE** | Added `src/classification_experiments.py`, CLI support in `main.py`, `tests/test_classification_experiments.py`, schema-guided categorical noise for tabular `NOISE` splits, and generated `results/EXP-C1` through `results/EXP-C3`. Current classification verdicts are mostly MODERATE across the implemented C1-C3 tasks, with `C2.1_and_rule` at WEAK and `C1.6_modular_class` at INCONCLUSIVE. See [log](implementation_log/TASK-13_classification_experiments.md) |
-| TASK-14 | Diagnostic Experiments | **COMPLETE** | Added `src/diagnostic_experiments.py`, CLI support in `main.py`, `tests/test_diagnostic_experiments.py` (21 tests), `InputEncoder.feature_names` and `SklearnModelWrapper.estimator` properties. EXP-D1 through EXP-D5 runners implemented: sample-efficiency learning curves, distractor robustness, noise robustness, feature-importance alignment (permutation importance), and solvability verdict calibration combining baseline + diagnostic evidence. See [log](implementation_log/TASK-14_diagnostic_experiments.md) |
+| TASK-14 | Diagnostic Experiments | **COMPLETE** | Added `src/diagnostic_experiments.py`, CLI support in `main.py`, `tests/test_diagnostic_experiments.py` (21 tests), `InputEncoder.feature_names` and `SklearnModelWrapper.estimator` properties. EXP-D1 through EXP-D5 runners implemented: sample-efficiency learning curves, distractor robustness, noise robustness, feature-importance alignment, and solvability verdict calibration combining baseline + diagnostic evidence. See [log](implementation_log/TASK-14_diagnostic_experiments.md) |
 | TASK-15 | Bonus: Algorithm Discovery | **COMPLETE** | Added `src/bonus_experiments.py`, CLI support in `main.py`, `tests/test_bonus_experiments.py` (20 tests). EXP-B1 extracts decision tree rules from classification models and evaluates functional equivalence on hard test sets. EXP-B2 searches over SR-10 DSL programs for sequence tasks using the reference algorithm as oracle. See [log](implementation_log/TASK-15_bonus_algorithm_discovery.md) |
+| TASK-16 | Methodology Feedback Planning | **COMPLETE** | Cross-checked the methodology review against the fresh rerun, `PREPUBLICATION_ANALYSIS`, and the compiled preprint; corrected stale counts and claims; documented a prioritized Phase 1-3 follow-up plan; and updated the status/catalog/ADR docs so the next task starts from the implemented `S0-S3` and `C0-C3` scope rather than the aspirational roadmap. See [log](implementation_log/TASK-16_methodology_feedback_planning.md) |
 
 **Milestone Gates:**
 - `[x]` FOUNDATION complete (TASK-01-04 done + V-1, V-2, V-9, V-10 passing)
@@ -63,6 +64,7 @@
 - `[x]` CLASSIFICATION BASELINE SUITE complete (TASK-13 done for implemented C1-C3 tiers + `results/EXP-C1` through `results/EXP-C3`)
 - `[x]` DIAGNOSTIC SUITE complete (TASK-14 done for EXP-D1 through EXP-D5 + 21 tests passing)
 - `[x]` BONUS ALGORITHM DISCOVERY complete (TASK-15 done for EXP-B1 + EXP-B2 + 20 tests passing)
+- `[x]` METHODOLOGY FEEDBACK PLAN complete (TASK-16 done; review docs and publication-facing claims reconciled to the latest rerun/preprint)
 
 ---
 
@@ -76,6 +78,8 @@ DataScience/
 |   |-- PROJECT_STATUS.md
 |   |-- IMPLEMENTATION_LOG_SUMMARY.md
 |   |-- ARCHITECTURE_DECISIONS.md
+|   |-- METHODOLOGY_SYSTEMATIC_REVIEW_2026-03-26.md
+|   |-- PREPUBLICATION_ANALYSIS_2026-03-26.md
 |   `-- implementation_log/
 |       |-- TASK-01_input_schema.md
 |       |-- TASK-02_classification_dsl.md
@@ -90,7 +94,9 @@ DataScience/
 |       |-- TASK-11_smoke_tests.md
 |       |-- TASK-12_sequence_experiments.md
 |       |-- TASK-13_classification_experiments.md
-|       `-- TASK-14_diagnostic_experiments.md
+|       |-- TASK-14_diagnostic_experiments.md
+|       |-- TASK-15_bonus_algorithm_discovery.md
+|       `-- TASK-16_methodology_feedback_planning.md
 |-- src/
 |   |-- __init__.py
 |   |-- schemas.py                    # SR-2 built
@@ -112,7 +118,7 @@ DataScience/
 |   `-- models/
 |       |-- __init__.py
 |       `-- harness.py                # SR-5 built (9 families)
-|-- tests/                            # Validation suite (457 tests total)
+|-- tests/                            # Validation suite (460 tests total)
 |   |-- __init__.py
 |   |-- test_schemas.py               # V-2: 54 tests
 |   |-- test_classification_dsl.py    # V-9: 58 tests
@@ -130,6 +136,10 @@ DataScience/
 |   |-- test_diagnostic_experiments.py    # TASK-14 diagnostic experiment coverage (21 tests)
 |   `-- test_bonus_experiments.py         # TASK-15 bonus experiment coverage (20 tests)
 |-- results/
+|-- output/
+|   |-- pdf/
+|   `-- publication_assets/
+|-- scripts/
 |-- conftest.py
 |-- requirements.txt
 `-- main.py
@@ -156,6 +166,7 @@ DataScience/
 - **DEV-015:** `np.trapz` replaced with `np.trapezoid` (NumPy 2.0+ compat) in `_curve_auc`.
 - **DEV-016:** TASK-15 selects classification tasks with MODERATE or better verdicts for EXP-B1 rule extraction (spec says STRONG, but current suite peaks at MODERATE). EXP-B2 searches all implemented S1/S3 sequence tasks rather than limiting to S5-tier STRONG tasks (S5 is deferred). Random DSL program search replaces model-guided search since the reference algorithm itself is used as the oracle.
 - **DEV-017:** TASK-15 uses `InputEncoder` + `DecisionTreeClassifier` directly for EXP-B1 rather than going through the full `ModelHarness.run()` pipeline, to access the fitted tree structure for rule extraction and structural comparison.
+- **DEV-018:** TASK-16 introduces an explicit post-implementation methodology/planning phase. Publication-facing documents are now required to stay scoped to the implemented `S0-S3` and `C0-C3` benchmark and to be cross-checked against the latest rerun-backed analysis before new execution tasks are queued.
 
 See `EXPERIMENT_CATALOG.md` Part 5 (Deviation Log) for structured entries.
 

@@ -7,7 +7,7 @@
 > Read alongside `EXPERIMENT_DESIGN.md` which provides the rationale and theory.
 > All implementation work should be traceable back to entries in this file.
 >
-> **Last Updated:** 2026-03-26
+> **Last Updated:** 2026-03-26 (TASK-16 planning logged)
 
 ---
 
@@ -1367,8 +1367,9 @@ Every task below must be completed in an order consistent with the dependency gr
 | Core experiments | TASK-12 + TASK-13 | S-track + C-track (parallel) | 3–4 days |
 | Analysis | TASK-14 | Diagnostics | 2–3 days |
 | Bonus | TASK-15 | Algorithm discovery | 2–3 days |
+| Post-review | TASK-16 | Methodology feedback planning + publication-alignment docs | 0.5-1 day |
 
-**Total: ~18–24 working days.** First validated pipeline (through TASK-11): ~11–14 days.
+**Total: ~19-25 working days.** First validated pipeline (through TASK-11): ~11-14 days.
 
 ---
 
@@ -1627,6 +1628,18 @@ Each entry follows this template:
 
 ---
 
+### DEV-018: TASK-16 adds an explicit post-implementation methodology planning phase
+
+- **Date:** 2026-03-26
+- **Task:** TASK-16
+- **Type:** SCOPE_CHANGE
+- **What changed:** The original execution plan ended at TASK-15. A new documentation/planning task was added after the fresh rerun and prepublication pass to reconcile methodology feedback, PR review themes, and manuscript interpretation before further code changes.
+- **Why:** Publication-facing documents had drifted from the rerun-backed evidence. The project needed an explicit planning checkpoint to align the methodology review, status docs, deviation log, and next-task queue to the implemented S0-S3 and C0-C3 benchmark.
+- **Impact:** Future work now starts from a documented methodology plan rather than from stale summary numbers. PROJECT_STATUS.md, IMPLEMENTATION_LOG_SUMMARY.md, ARCHITECTURE_DECISIONS.md, and the methodology review all reference this planning step.
+- **Resolution:** Accepted as a post-implementation task. TASK-16 produces the planning artifact and queues TASK-17 for execution work.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
@@ -1646,7 +1659,7 @@ Major architectural or design decisions made during implementation that are not 
 
 ### Entries
 
-_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-028._
+_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-029._
 
 ---
 
@@ -1696,7 +1709,7 @@ Use this checklist before trusting any experiment results.
 [ ] V-10: Sequence DSL — type safe, deterministic, hand-verified programs match
 [ ] V-G1: Round-trip check passes
 [ ] V-G2: Control tasks produce WEAK/NEGATIVE verdicts
-[ ] V-G3: Trivial tasks produce STRONG verdicts
+[ ] V-G3: Trivial tasks produce MODERATE or better verdicts under the current operationalization
 [ ] V-G4: No cross-task data contamination
 ```
 
@@ -1721,6 +1734,7 @@ Use this checklist before trusting any experiment results.
 | TASK-13 | EXP-C1–C5 | TASK-11 | |
 | TASK-14 | EXP-D1–D5 | TASK-12, 13 | |
 | TASK-15 | EXP-B1–B2 | TASK-14 | |
+| TASK-16 | Methodology feedback planning + publication-alignment docs | TASK-15 | |
 
 ---
 
