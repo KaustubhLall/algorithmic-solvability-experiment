@@ -7,7 +7,7 @@
 > Read alongside `EXPERIMENT_DESIGN.md` which provides the rationale and theory.
 > All implementation work should be traceable back to entries in this file.
 >
-> **Last Updated:** 2026-03-26 (TASK-16 planning logged)
+> **Last Updated:** 2026-03-27 (TASK-20 classification baseline-separation repair logged)
 
 ---
 
@@ -1640,6 +1640,54 @@ Each entry follows this template:
 
 ---
 
+### DEV-019: TASK-17 wires D1/D2/D4 evidence into baseline reporting and aligns EXP-D5
+
+- **Date:** 2026-03-26
+- **Task:** TASK-17 (SR-8, EXP-D5)
+- **Type:** CRITERIA_CHANGE
+- **What changed:** `compute_solvability_verdict()` in `src/reporting.py` now loads EXP-D1/EXP-D2/EXP-D4 artifacts from the results root when they exist and uses them to evaluate criteria 6-8. EXP-D5 now reuses the same diagnostic evidence resolver rather than maintaining a separate interpretation path.
+- **Why:** TASK-16 showed that the repo was under-reporting available evidence: baseline verdicts stayed at `MODERATE` while EXP-D5 had already demonstrated that some tasks could satisfy `STRONG`. A shared resolver closes that methodology gap.
+- **Impact:** After the TASK-17 rerun, baseline classification/control verdicts move to 2 `STRONG`, 9 `MODERATE`, 1 `WEAK`, 1 `INCONCLUSIVE`, and 1 `NEGATIVE`, with `C1.1_numeric_threshold` and `C2.6_categorical_gate` now `STRONG`. EXP-D5 becomes a consistency check on the same evidence rather than a separate promotion-only layer.
+- **Resolution:** Accepted and documented in ADR-030 plus the TASK-17 implementation log.
+
+---
+
+### DEV-020: TASK-18 upgrades the executed sequence protocol and adds runtime-complete publication assets
+
+- **Date:** 2026-03-26
+- **Task:** TASK-18 (EXP-S1, EXP-S2, EXP-S3, SR-7, SR-8)
+- **Type:** PROTOCOL_CHANGE
+- **What changed:** The executed sequence baseline now goes beyond the original TASK-12 setup. `EXP-S1` and `EXP-S2` run with 5 seeds and 1000 samples, the LSTM trains for 200 epochs with weight decay and `ReduceLROnPlateau`, checkpoint selection uses an internal validation slice, and per-epoch held-out monitoring curves are stored in `training_curve`. Diagnostic and bonus summaries now also log runtime so publication assets have full 16/16 runtime coverage.
+- **Why:** TASK-16 identified short LSTM training horizons and incomplete runtime reporting as major publication-readiness gaps. The sequence benchmark needed a fairer training protocol and the asset bundle needed complete reproducibility metadata.
+- **Impact:** The sequence/control baseline improves to 11 `NEGATIVE`, 1 `MODERATE`, 2 `WEAK`, and 2 `INCONCLUSIVE`, with `S1.4_count_symbol` promoted to `MODERATE`, `S1.5_parity` promoted to `WEAK` under the real LSTM path, and `S2.3_running_min` promoted to `INCONCLUSIVE`. `output/publication_assets/` now includes `sequence_training_dynamics.csv`, `sequence_training_dynamics.png`, and complete experiment runtime coverage.
+- **Resolution:** Accepted and documented in ADR-031 plus the TASK-18 implementation log.
+
+---
+
+### DEV-021: TASK-19 adds an explicit second-paper synthesis and PDF QA phase
+
+- **Date:** 2026-03-26
+- **Task:** TASK-19
+- **Type:** PROCESS_CHANGE
+- **What changed:** The execution plan now includes a dedicated synthesis task after the major reruns. Publication-facing markdown analysis, manuscript source, compiled PDF, and visual PDF QA are treated as tracked deliverables rather than incidental byproducts of experiment execution.
+- **Why:** The earlier prepublication draft drifted from the rerun-backed artifacts. A formal synthesis step was needed to translate the refreshed evidence bundle into a review-ready paper without reintroducing stale counts or unsupported claims.
+- **Impact:** Future paper updates should start from `output/publication_assets/` and the markdown analysis derived from it. The next execution task now begins after a manuscript-quality interpretation pass rather than before one.
+- **Resolution:** Accepted and documented in ADR-032 plus the TASK-19 implementation log.
+
+---
+
+### DEV-022: TASK-20 repairs `C2.1_and_rule` by rebalancing the task-local sampler
+
+- **Date:** 2026-03-27
+- **Task:** TASK-20
+- **Type:** PROTOCOL_CHANGE
+- **What changed:** `C2.1_and_rule` no longer uses the generic uniform tabular sampler. It now uses a task-local balanced sampler that preserves the rule `x1 > 50 AND cat1 == "A"` but samples the positive region and the three negative regions explicitly so the label prior is near-balanced.
+- **Why:** Under the original sampler, positives appeared only about one sixth of the time, which left the majority-class baseline around 0.86 IID accuracy and caused criterion 3 to fail for methodological reasons rather than because the task was actually hard.
+- **Impact:** After the TASK-20 rerun, `C2.1_and_rule` moves from `WEAK` to `STRONG`, the classification/control baseline shifts to 3 `STRONG`, 9 `MODERATE`, 1 `INCONCLUSIVE`, and 1 `NEGATIVE`, and the next methodology task becomes baseline distractor-split support rather than another classification repair.
+- **Resolution:** Accepted and documented in ADR-033 plus the TASK-20 implementation log.
+
+---
+
 ## Decision Record
 
 Major architectural or design decisions made during implementation that are not captured in the original plan.
@@ -1659,7 +1707,7 @@ Major architectural or design decisions made during implementation that are not 
 
 ### Entries
 
-_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-029._
+_Decisions are logged in `docs/ARCHITECTURE_DECISIONS.md` as ADR-001 through ADR-033._
 
 ---
 
@@ -1735,6 +1783,11 @@ Use this checklist before trusting any experiment results.
 | TASK-14 | EXP-D1–D5 | TASK-12, 13 | |
 | TASK-15 | EXP-B1–B2 | TASK-14 | |
 | TASK-16 | Methodology feedback planning + publication-alignment docs | TASK-15 | |
+| TASK-17 | Methodology feedback execution: verdict wiring + rerun-backed asset refresh | TASK-16 | |
+| TASK-18 | Sequence training protocol upgrade + runtime-complete publication-asset refresh | TASK-17 | |
+| TASK-19 | Methodology synthesis + second-paper manuscript/PDF QA | TASK-18 | |
+| TASK-20 | Classification baseline-separation repair | TASK-19 | |
+| TASK-21 | Baseline distractor split support | TASK-20 | |
 
 ---
 

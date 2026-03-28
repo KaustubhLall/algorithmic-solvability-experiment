@@ -1,5 +1,5 @@
 task_id,selected_model,clean_accuracy,max_noise_accuracy,noise_accuracy_drop,smooth_degradation
 C1.1_numeric_threshold,decision_tree,1.0,0.9904,0.0096,True
-C2.1_and_rule,decision_tree,0.997,0.9148,0.0822,True
+C2.1_and_rule,decision_tree,0.9985,0.8704,0.1281,True
 C3.1_xor,decision_tree,0.9919,0.9793,0.0126,True
 C3.5_interaction_poly,gradient_boosted_trees,0.9741,0.9741,0.0,True

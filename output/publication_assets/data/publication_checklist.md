@@ -38,6 +38,7 @@
 - [x] experiment_runtimes.csv
 - [x] publication_summary.json
 - [x] publication_checklist.md
+- [x] sequence_training_dynamics.csv
 
 ## Derived figure files
 - [x] baseline_verdict_distribution.png
@@ -47,7 +48,7 @@
 - [x] top_calibrated_scores.png
 - [x] bonus_success_rates.png
 - [x] diagnostic_matrix.png
+- [x] sequence_training_dynamics.png
 
 ## Runtime coverage
-- Parsed runtimes available for 9 of 16 experiments.
-- Runtime not recoverable from summary artifacts for: EXP-D1, EXP-D2, EXP-D3, EXP-D4, EXP-D5, EXP-B1, EXP-B2.
+- Parsed runtimes available for 16 of 16 experiments.

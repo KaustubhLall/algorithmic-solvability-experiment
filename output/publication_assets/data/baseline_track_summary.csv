@@ -1,3 +1,3 @@
 track,task_count,mean_score,mean_best_iid_accuracy,mean_best_ood_accuracy,negative,weak,inconclusive,moderate,strong
-sequence,16,0.3359,0.3195,0.2135,12,2,2,0,0
-classification,14,0.6753,0.9355,0.9702,1,1,1,11,0
+sequence,16,0.3551,0.3807,0.2591,11,2,2,1,0
+classification,14,0.6792,0.9356,0.9702,1,0,1,9,3
