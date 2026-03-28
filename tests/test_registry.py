@@ -318,6 +318,17 @@ class TestSpotChecks:
         assert task.reference_algorithm({"x1": 75.0, "x2": 0.0, "cat1": "B"}) == "NO"
         assert task.reference_algorithm({"x1": 25.0, "x2": 0.0, "cat1": "A"}) == "NO"
 
+    def test_c2_1_and_rule_sampler_balances_labels(self, registry: TaskRegistry):
+        task = registry.get("C2.1_and_rule")
+
+        labels = [
+            task.reference_algorithm(task.input_sampler(seed))
+            for seed in range(1000)
+        ]
+        yes_fraction = labels.count("YES") / len(labels)
+
+        assert 0.45 <= yes_fraction <= 0.55
+
     def test_c3_1_xor(self, registry: TaskRegistry):
         task = registry.get("C3.1_xor")
         assert task.reference_algorithm({"x1": 75.0, "x2": 25.0}) == "A"  # T XOR F

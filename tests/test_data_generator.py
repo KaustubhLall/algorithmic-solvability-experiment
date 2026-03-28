@@ -273,3 +273,12 @@ class TestMultiTaskGeneration:
                 clean = task.input_sampler(s.seed)
                 expected = task.reference_algorithm(clean)
                 assert task.verifier(s.output_data, expected)
+
+    def test_c2_1_and_rule_dataset_is_approximately_balanced(self, registry):
+        task = registry.get("C2.1_and_rule")
+
+        dataset = generate_dataset(task, n_samples=600, base_seed=42)
+        class_balance = compute_class_balance(dataset)
+
+        assert 0.45 <= class_balance["YES"] <= 0.55
+        assert 0.45 <= class_balance["NO"] <= 0.55

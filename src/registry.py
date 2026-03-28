@@ -437,6 +437,37 @@ def _cls_sampler(schema: TabularInputSchema) -> Callable[[int], Dict[str, Any]]:
     return sampler
 
 
+def _cls_balanced_and_rule_sampler(schema: TabularInputSchema) -> Callable[[int], Dict[str, Any]]:
+    """Sample C2.1 examples with balanced labels while preserving the rule."""
+
+    def sampler(seed: int) -> Dict[str, Any]:
+        rng = np.random.default_rng(seed)
+        row: Dict[str, Any] = {
+            spec.name: spec.sample(rng)
+            for spec in schema.all_feature_specs
+        }
+
+        positive = bool(rng.integers(0, 2))
+        if positive:
+            row["x1"] = float(rng.uniform(50.0, 100.0))
+            row["cat1"] = "A"
+            return row
+
+        negative_region = int(rng.integers(0, 3))
+        if negative_region == 0:
+            row["x1"] = float(rng.uniform(0.0, 50.0))
+            row["cat1"] = "A"
+        elif negative_region == 1:
+            row["x1"] = float(rng.uniform(50.0, 100.0))
+            row["cat1"] = "B" if bool(rng.integers(0, 2)) else "C"
+        else:
+            row["x1"] = float(rng.uniform(0.0, 50.0))
+            row["cat1"] = "B" if bool(rng.integers(0, 2)) else "C"
+        return row
+
+    return sampler
+
+
 def _build_c0_tasks() -> List[TaskSpec]:
     """C0: Control tasks."""
     tasks = []
@@ -551,7 +582,7 @@ def _build_c2_tasks() -> List[TaskSpec]:
         description="x1 > 50 AND cat1 == 'A' → YES, else NO",
         input_schema=schema, output_type="class", n_classes=2,
         reference_algorithm=lambda row: "YES" if (row["x1"] > 50.0 and row["cat1"] == "A") else "NO",
-        input_sampler=_cls_sampler(schema), verifier=classification_verifier,
+        input_sampler=_cls_balanced_and_rule_sampler(schema), verifier=classification_verifier,
         complexity_metadata={"depth": 2, "n_features_used": 2},
     ))
 

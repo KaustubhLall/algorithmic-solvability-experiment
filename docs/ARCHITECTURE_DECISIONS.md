@@ -5,7 +5,7 @@
 > The Deviation Log records *changes from plan*. This document records *decisions within implementation*
 > that aren't deviations but are still worth preserving for future context.
 >
-> **Last Updated:** 2026-03-26 (TASK-16 complete)
+> **Last Updated:** 2026-03-27 (TASK-20 complete)
 > **Format:** Append only. Never modify or delete past entries.
 
 ---
@@ -466,3 +466,67 @@ These decisions were made during planning and are captured here for completeness
 - **Decision:** Option 2 - keep `PREPUBLICATION_ANALYSIS_2026-03-26.md` and the manuscript/source artifacts as the rerun-backed empirical anchor, and require status/review docs to stay scoped to implemented `S0-S3` and `C0-C3` results unless a future task expands the benchmark.
 - **Rationale:** This reduces documentation drift, makes publication claims auditable, and prevents roadmap language from being mistaken for executed evidence.
 - **Consequences:** Follow-on tasks should update the rerun-backed analysis first, then propagate any resulting claim changes into `PROJECT_STATUS.md`, `IMPLEMENTATION_LOG_SUMMARY.md`, and the methodology/paper docs.
+
+---
+
+### ADR-030: Centralize diagnostic-evidence resolution in SR-8 and reuse it in EXP-D5
+
+- **Date:** 2026-03-26
+- **Task:** TASK-17
+- **Status:** ACCEPTED
+- **Context:** TASK-16 identified a methodology gap: baseline `solvability_verdicts.json` artifacts still hardcoded criteria 6 and 8 as unmet, while EXP-D5 separately folded in D1/D2/D4 evidence. That let the baseline reports and the calibration pass tell different stories from the same rerun.
+- **Options considered:**
+  1. Keep baseline reporting blind to diagnostics and let EXP-D5 remain the only diagnostic-aware label path
+  2. Re-implement D1/D2/D4 parsing separately inside both `src/reporting.py` and `src/diagnostic_experiments.py`
+  3. Build one task-indexed diagnostic evidence resolver in SR-8 and have both baseline reporting and EXP-D5 call it
+- **Decision:** Option 3 - add a shared diagnostic evidence index/resolver in `src/reporting.py`, auto-load EXP-D1/EXP-D2/EXP-D4 artifacts from the results root when present, and have EXP-D5 reuse the same resolver.
+- **Rationale:** A shared resolver removes drift between baseline and calibrated verdicts, keeps the optional criteria interpretation auditable in one place, and lets publication-facing assets reflect the strongest currently measured evidence without duplicating logic.
+- **Consequences:** Baseline reruns now surface two classification `STRONG` tasks directly (`C1.1_numeric_threshold`, `C2.6_categorical_gate`), while EXP-D5 mainly serves as a consistency/calibration check. Notes must explicitly disclose when EXP-D4 falls back to the best available alignment model because the exact best baseline model was not evaluated in D4.
+
+---
+
+### ADR-031: Select LSTM checkpoints by internal validation loss while logging held-out training curves
+
+- **Date:** 2026-03-26
+- **Task:** TASK-18
+- **Status:** ACCEPTED
+- **Context:** The methodology review called for longer sequence training, learning-rate scheduling, and per-epoch monitoring. We needed a way to inspect delayed sequence-learning dynamics without tuning directly on the reporting split.
+- **Options considered:**
+  1. Keep the old final-epoch-only LSTM path with no per-epoch logging
+  2. Select checkpoints on the held-out reporting split to maximize apparent generalization
+  3. Split off an internal validation slice for checkpoint selection and log a separate held-out monitoring curve each epoch
+- **Decision:** Option 3 - the upgraded `LSTMSequenceModel` now uses an internal validation slice for checkpoint selection, while also logging per-epoch train loss, validation loss, held-out exact match, held-out token accuracy, and learning rate into `training_curve`.
+- **Rationale:** This preserves methodological hygiene by avoiding direct checkpoint tuning on the reporting split, while still exposing the evidence needed to study delayed generalization and checkpoint-vs-final-epoch divergence.
+- **Consequences:** Sequence runs now produce richer SR-7/SR-8 artifacts and support publication-facing training-dynamics figures. Reported IID/OOD metrics remain conservative because they reflect the restored validation-selected checkpoint, not the best held-out epoch.
+
+---
+
+### ADR-032: Make the publication asset bundle the only manuscript source of truth
+
+- **Date:** 2026-03-26
+- **Task:** TASK-19
+- **Status:** ACCEPTED
+- **Context:** Earlier paper drafts drifted from the rerun-backed artifacts because the manuscript narrative was being updated directly from summaries and memory rather than from one checked evidence bundle.
+- **Options considered:**
+  1. Keep updating the manuscript directly and patch numbers manually whenever reruns change
+  2. Treat `output/publication_assets/` plus the markdown analysis derived from it as the required intermediate layer before any manuscript update
+  3. Freeze the manuscript until all methodology work is complete
+- **Decision:** Option 2 - regenerate `output/publication_assets/`, rewrite the publication-facing markdown analysis from those assets, and only then update the manuscript/PDF from that markdown analysis.
+- **Rationale:** This creates a traceable path from experiment artifacts to paper claims, makes figure/table completeness auditable, and reduces the chance of publication text lagging behind reruns.
+- **Consequences:** Future paper updates should start by refreshing the asset bundle and markdown analysis. Manuscript delivery now includes PDF compilation plus visual QA of rendered pages before the draft is considered review-ready.
+
+---
+
+### ADR-033: Repair `C2.1_and_rule` by rebalancing the task prior, not by weakening the verdict rule
+
+- **Date:** 2026-03-27
+- **Task:** TASK-20
+- **Status:** ACCEPTED
+- **Context:** `C2.1_and_rule` was behaving like an easy, learnable classification task in every substantive sense, but the original uniform sampler made the positive condition `x1 > 50 AND cat1 == "A"` occur only about one sixth of the time. That left the majority-class baseline near 0.86 IID accuracy and caused criterion 3 to fail for methodological reasons rather than model-quality reasons.
+- **Options considered:**
+  1. Lower the SR-8 baseline-separation threshold globally
+  2. Change the task rule or threshold so the positive class is more common under the global sampler
+  3. Keep the rule and reporting criteria fixed, but introduce a task-local balanced sampler for `C2.1_and_rule`
+- **Decision:** Option 3 - add a task-local balanced sampler that preserves the rule, preserves unused-feature sampling, and explicitly covers the positive region plus all three negative regions.
+- **Rationale:** The problem was task prior skew, not an overly strict reporting criterion. A task-local sampler keeps the benchmark semantics intact while removing a misleading majority-class shortcut. It also avoids loosening SR-8 in a way that would affect unrelated tasks.
+- **Consequences:** `C2.1_and_rule` now samples at roughly 51/49 label balance, its majority baseline falls to about 0.50 IID accuracy, and the task moves from `WEAK` to `STRONG` under the unchanged verdict logic. Documentation must explicitly note that the registry still contains 32 tasks while the baseline-report tables cover 30 scored tasks.
